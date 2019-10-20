@@ -22,6 +22,7 @@ github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
 # github.com/joho/godotenv v1.3.0
 github.com/joho/godotenv
+github.com/joho/godotenv/autoload
 # github.com/json-iterator/go v1.1.7
 github.com/json-iterator/go
 # github.com/magiconair/properties v1.8.1
