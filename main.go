@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"instatasks/config"
 	"instatasks/middlwares"
 	"log"
@@ -15,6 +16,11 @@ import (
 
 func main() {
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	config := config.InitConfig()
 
 	router := gin.Default()
@@ -26,6 +32,7 @@ func main() {
 		})
 	})
 
+	log.Printf("Listen on port: %s\n", config.Server.Port)
 	srv := &http.Server{
 		Addr:    ":" + config.Server.Port,
 		Handler: router,
