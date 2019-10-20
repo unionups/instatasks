@@ -1,0 +1,10 @@
+database:
+  driver: "postgres"
+  dbname: "instatasks_production"
+  username: "dbuser"
+  password: "mysecretpassword"
+  host: "localhost"
+  port: "5434"
+
+server:
+  port: "8080"

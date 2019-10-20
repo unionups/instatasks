@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+
+  db:
+    container_name: instatasksdb
+    image: postgres:alpine
+    hostname: db
+    environment:
+      GET_HOST_FROM: dns
+      POSTGRES_DB: instatasks_production
+      POSTGRES_USER: dbuser
+      POSTGRES_PASWORD: mysecretpassword
+    ports:
+      - 5434:5432
+    networks:
+      - instatasksnet
+
+  web:
+    container_name: instatasks
+    image: djekxa/instatasks:v1
+    hostname: instatasks
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      GET_HOSTS_FROM: dns
+    networks:
+    - instatasksnet
+    volumes:
+    - .:/go/src/instatasks
+    ports:
+    - 8080:8080
+    depends_on:
+    - db
+    links:
+    - db
+    labels:
+      kompose.service.type: LoadBalancer
+
+networks:
+  instatasksnet:
+    driver: bridge
