@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"ugin/config"
 )
 
 func main() {
