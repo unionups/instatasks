@@ -1,9 +1,9 @@
 package config
 
 import (
-	"log"
-
 	"github.com/spf13/viper"
+	"log"
+	"os"
 )
 
 type Configuration struct {
@@ -26,6 +26,8 @@ func InitConfig() Configuration {
 	if err != nil {
 		log.Fatalf("Unable to decode into struct, %v", err)
 	}
+
+	configuration.Server.Port = os.Getenv("PORT")
 
 	return configuration
 }

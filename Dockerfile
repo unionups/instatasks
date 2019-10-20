@@ -10,4 +10,3 @@ RUN go install instatasks
 
 CMD /go/bin/instatasks
 
-EXPOSE 8080

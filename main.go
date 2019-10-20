@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	_ "github.com/joho/godotenv/autoload"
 	"instatasks/config"
 	"instatasks/middlwares"
 	"log"
@@ -11,7 +12,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"ugin/config"
 )
 
 func main() {
@@ -27,6 +27,7 @@ func main() {
 		})
 	})
 
+	log.Printf("Listen on port: %s\n", config.Server.Port)
 	srv := &http.Server{
 		Addr:    ":" + config.Server.Port,
 		Handler: router,
