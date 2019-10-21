@@ -7,4 +7,8 @@ type DatabaseConfiguration struct {
 	Password string
 	Host     string
 	Port     string
+	LogMode  bool
+	// connection pool
+	MaxOpenConns int
+	MaxIdleConns int
 }

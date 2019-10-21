@@ -2,10 +2,11 @@ version: '3'
 
 services:
 
-  db:
+  postgres:
     container_name: instatasksdb
     image: postgres:alpine
-    hostname: db
+    restart: always
+    hostname: postgres
     environment:
       GET_HOST_FROM: dns
       POSTGRES_DB: instatasks_production
@@ -32,9 +33,9 @@ services:
     ports:
     - 8080:8080
     depends_on:
-    - db
+    - postgres
     links:
-    - db
+    - postgres
     labels:
       kompose.service.type: LoadBalancer
 

@@ -9,6 +9,7 @@ import (
 type Configuration struct {
 	Server   ServerConfiguration
 	Database DatabaseConfiguration
+	AppEnv   string
 }
 
 func InitConfig() Configuration {
@@ -28,6 +29,7 @@ func InitConfig() Configuration {
 	}
 
 	configuration.Server.Port = os.Getenv("PORT")
+	configuration.AppEnv = os.Getenv("APP_ENV")
 
 	return configuration
 }

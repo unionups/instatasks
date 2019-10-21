@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	_ "github.com/joho/godotenv/autoload"
 	"instatasks/config"
+	"instatasks/database"
 	"instatasks/middlwares"
 	"log"
 	"net/http"
@@ -14,9 +16,19 @@ import (
 	"time"
 )
 
+var db *gorm.DB
+var err error
+
 func main() {
 
 	config := config.InitConfig()
+	db = database.InitDB()
+	db.DB().Ping()
+	defer db.Close()
+
+	if config.AppEnv != "development" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	router := gin.Default()
 	router.Use(middlwares.CORS())

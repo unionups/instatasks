@@ -1,7 +1,11 @@
 database:
-  driver: "postgres"
-  dbname: "instatasks_production"
-  username: "dbuser"
-  password: "mysecretpassword"
-  host: "localhost"
-  port: "5434"
+  driver: postgres
+  dbname: instatasks_production
+  username: dbuser
+  password: mysecretpassword
+  host: postgres
+  port: 5432
+  # connection pool
+  max_open_conns: 100
+  max_idle_conns: 50
+
