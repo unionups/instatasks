@@ -6,7 +6,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"instatasks/config"
 	"os"
-	// "time"
+	"time"
 )
 
 type Database struct {
@@ -48,9 +48,10 @@ func InitDB() *gorm.DB {
 		panic("failed to connect database")
 	}
 
-	// db.DB().SetMaxIdleConns(config.Database.MaxIdleConns)
+	db.DB().SetMaxIdleConns(config.Database.MaxIdleConns)
 	db.DB().SetMaxOpenConns(config.Database.MaxOpenConns)
-	// db.DB().SetConnMaxLifetime(time.Hour)
+	db.DB().SetConnMaxLifetime(time.Hour)
+
 	if config.AppEnv == "development" {
 		db.LogMode(true)
 	}
@@ -62,4 +63,8 @@ func InitDB() *gorm.DB {
 
 func GetDB() *gorm.DB {
 	return DB
+}
+
+func Migrate() {
+	migrate()
 }

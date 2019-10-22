@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/joho/godotenv/autoload"
 	"instatasks/config"
+	"instatasks/controllers"
 	"instatasks/database"
 	"instatasks/middlwares"
 	"log"
@@ -19,17 +20,7 @@ import (
 var db *gorm.DB
 var err error
 
-func main() {
-
-	config := config.InitConfig()
-	db = database.InitDB()
-	db.DB().Ping()
-	defer db.Close()
-
-	if config.AppEnv != "development" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
+func SetupRouter() *gin.Engine {
 	router := gin.Default()
 	router.Use(middlwares.CORS())
 
@@ -38,6 +29,26 @@ func main() {
 			"message": "pong",
 		})
 	})
+
+	router.POST("/accaunt", controllers.GetOrCreateUser())
+
+	return router
+}
+
+func main() {
+
+	config := config.InitConfig()
+	db = database.InitDB()
+	db.DB().Ping()
+	defer db.Close()
+
+	database.Migrate()
+
+	if config.AppEnv != "development" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	router := SetupRouter()
 
 	log.Printf("Listen on port: %s\n", config.Server.Port)
 	srv := &http.Server{
