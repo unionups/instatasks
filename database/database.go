@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"instatasks/config"
 	"os"
 	"time"
@@ -21,9 +22,10 @@ func InitDB() *gorm.DB {
 	var dbURL string
 
 	config := config.InitConfig()
+	appEnv := config.AppEnv
 
 	fmt.Println(config.AppEnv)
-	if config.AppEnv == "staging" {
+	if appEnv == "staging" {
 		dbURL = os.Getenv("DATABASE_URL")
 	} else {
 		// driver := config.Database.Driver
@@ -41,30 +43,33 @@ func InitDB() *gorm.DB {
 		)
 	}
 
-	db, err = gorm.Open("postgres", dbURL)
+	if appEnv == "test" {
+		db, err = gorm.Open("sqlite3", "file::memory:?cache=shared")
+	} else {
+		db, err = gorm.Open("postgres", dbURL)
+	}
 
 	if err != nil {
 		panic(err)
 		panic("failed to connect database")
 	}
 
-	db.DB().SetMaxIdleConns(config.Database.MaxIdleConns)
-	db.DB().SetMaxOpenConns(config.Database.MaxOpenConns)
-	db.DB().SetConnMaxLifetime(time.Hour)
+	if appEnv != "test" {
+		db.DB().SetMaxIdleConns(config.Database.MaxIdleConns)
+		db.DB().SetMaxOpenConns(config.Database.MaxOpenConns)
+		db.DB().SetConnMaxLifetime(time.Hour)
+	}
 
-	if config.AppEnv == "development" {
+	if appEnv == "development" || appEnv == "test" {
 		db.LogMode(true)
 	}
 
 	DB = db
+	migrate()
 
 	return DB
 }
 
 func GetDB() *gorm.DB {
 	return DB
-}
-
-func Migrate() {
-	migrate()
 }

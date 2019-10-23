@@ -5,18 +5,20 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/lib/pq"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+
+	// "github.com/lib/pq"
 	"gopkg.in/gormigrate.v1"
 	"time"
 	// "instatasks/models"
 )
 
 func migrate() {
-	db := GetDB()
+	db := DB
 	m := gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		// create users table
 		{
-			ID: "101608301401",
+			ID: "101608301601",
 			Migrate: func(tx *gorm.DB) error {
 				// it's a good pratice to copy the struct inside the function,
 				// so side effects are prevented if the original struct changes during the time
@@ -24,12 +26,11 @@ func migrate() {
 					Instagramid uint `json:"instagramid" binding:"required" gorm:"primary_key" `
 					CreatedAt   time.Time
 					UpdatedAt   time.Time
-					DeletedAt   *time.Time     `sql:"index"`
-					Banned      bool           `gorm:"default:false"`
-					Coins       int            `json:"coins" gorm:"default:0"`
-					Deviceid    string         `json:"deviceid" gorm:"-"`
-					DeviceIds   pq.StringArray `gorm:"type:varchar(100)[]"`
-					Rateus      bool           `json:"rateus" gorm:"default:true"`
+					DeletedAt   *time.Time `sql:"index"`
+					Banned      bool       `gorm:"default:false"`
+					Coins       int        `json:"coins" gorm:"default:0"`
+					Deviceid    string     `json:"deviceid" gorm:"-"`
+					Rateus      bool       `json:"rateus" gorm:"default:true"`
 				}
 				return tx.AutoMigrate(&User{}).Error
 			},
@@ -39,10 +40,11 @@ func migrate() {
 		},
 		// create banned_devices table
 		{
-			ID: "101608301501",
+			ID: "101608301701",
 			Migrate: func(tx *gorm.DB) error {
 				type BannedDevice struct {
-					Deviceid string `gorm:"primary_key"`
+					Deviceid  string `gorm:"primary_key"`
+					CreatedAt time.Time
 				}
 				return tx.AutoMigrate(&BannedDevice{}).Error
 			},

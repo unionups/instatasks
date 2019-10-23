@@ -32,15 +32,14 @@ func GetOrCreateUser() gin.HandlerFunc {
 		user := json.Data
 
 		if user.Deviceid == "" {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Request must have Devise ID "})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Request must have Devise ID"})
 			log.Println("Bad Request Error: Request must have Devise ID ")
 			return
 		}
 
-		if err = FirstNotBannedUser(&user, db); err != nil {
+		if err = models.FirstNotBannedUserScope(&user, db); err != nil {
 			if gorm.IsRecordNotFoundError(err) {
 				// record not found
-				user.DeviceIds = append(user.DeviceIds, user.Deviceid)
 				if err = db.Create(&user).Error; err != nil {
 					c.AbortWithStatusJSON(500, nil)
 					log.Println("DB error: ", err)
@@ -48,24 +47,14 @@ func GetOrCreateUser() gin.HandlerFunc {
 				}
 			} else if IsStatusForbiddenError(err) {
 				c.AbortWithStatusJSON(http.StatusForbidden, nil)
-				log.Println("error: Banned")
+				log.Println("Error: Banned")
 				return
 			} else {
 				c.AbortWithStatusJSON(500, nil)
 				log.Println("DB error: ", err)
 				return
 			}
-		} else {
-			if !IsItemInSlice(user.DeviceIds, user.Deviceid) {
-				user.DeviceIds = append(user.DeviceIds, user.Deviceid)
-				if err = db.Model(&user).Update("devise_ids", user.DeviceIds).Error; err != nil {
-					c.AbortWithStatusJSON(500, gin.H{"error": err})
-					log.Println("DB error: ", err)
-					return
-				}
-			}
 		}
-		log.Println("DeviceIds: ", user.DeviceIds)
 		c.JSON(200, gin.H{"instagramid": user.Instagramid, "coins": user.Coins, "rateus": user.Rateus})
 	}
 }
