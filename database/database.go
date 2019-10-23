@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-type Database struct {
-	*gorm.DB
-}
+// type Database struct {
+// 	*gorm.DB
+// }
 
 var DB *gorm.DB
 var err error

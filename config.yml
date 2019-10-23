@@ -2,10 +2,15 @@ database:
   driver: postgres
   dbname: instatasks_production
   username: dbuser
-  password: mysecretpassword
   host: postgres
   port: 5432
   # connection pool
   max_open_conns: 100
   max_idle_conns: 50
 
+redis:
+  addr: redis:6379
+  # connection pool
+  min_idle_conns: 50
+  max_conn_age:   1
+  pool_size: 100

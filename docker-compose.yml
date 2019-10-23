@@ -7,35 +7,80 @@ services:
     image: postgres:alpine
     restart: always
     hostname: postgres
-    environment:
-      GET_HOST_FROM: dns
-      POSTGRES_DB: instatasks_production
-      POSTGRES_USER: dbuser
-      POSTGRES_PASWORD: mysecretpassword
-    ports:
-      - 5434:5432
+    volumes:
+      - ./data/postgresql/pgdata:/var/lib/postgresql/data
+    env_file: 
+      - .env
+    # ports:
+    #   - 5434:5432
     networks:
       - instatasksnet
+    # deploy:
+    #   mode: replicated
+    #   replicas: 2
+    #   endpoint_mode: dnsrr
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8081:8080
+  #   networks:
+  #     - instatasksnet
+
+  redis: 
+    container_name: redis_instatasksdb
+    image: redis:alpine
+    hostname: redis
+    restart: always
+    env_file: 
+      - .env
+    networks:
+      - instatasksnet
+    volumes:
+      # - ./redis_storage/data:/data
+      - ./redis_storage/config:/usr/local/etc/redis
+    # sysctls:
+    #   - vm.overcommit_memory=1
+    command:
+      - 'redis-server'
+      - '--loglevel ${REDIS_LOGLEVEL:-warning}'
+      - '--databases ${REDIS_DATABASES:-2}'
+      - '--appendonly ${REDIS_APPENDONLY:-no}'
+      - '--maxmemory ${REDIS_MAXMEM:-100mb}'
+      - '--maxmemory-policy ${REDIS_POLICY:-volatile-lfu}'
+      - '--requirepass ${REDIS_PASSWORD}'
+
 
   web:
     container_name: instatasks
     image: djekxa/instatasks:v1
     hostname: instatasks
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      GET_HOSTS_FROM: dns
+    env_file: 
+      - .env
     networks:
-    - instatasksnet
+      - instatasksnet
     volumes:
-    - .:/go/src/instatasks
+      - .:/go/src/instatasks
     ports:
-    - 8080:8080
+      - 8080:8080
+    # swarm mode 
+    # deploy:
+    #   mode: replicated
+    #   replicas: 2
+    #   endpoint_mode: vip
+    #   update_config:
+    #     parallelism: 2
+    #     delay: 10s
     depends_on:
-    - postgres
+      - postgres
+      - redis
     links:
-    - postgres
+      - postgres
+      - redis
     labels:
       kompose.service.type: LoadBalancer
 

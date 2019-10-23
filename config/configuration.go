@@ -9,6 +9,7 @@ import (
 type Configuration struct {
 	Server   ServerConfiguration
 	Database DatabaseConfiguration
+	Redis    RedisConfiguration
 	AppEnv   string
 }
 
@@ -30,6 +31,10 @@ func InitConfig() Configuration {
 
 	configuration.Server.Port = os.Getenv("PORT")
 	configuration.AppEnv = os.Getenv("APP_ENV")
+	configuration.Database.Username = os.Getenv("POSTGRES_USER")
+	configuration.Database.Password = os.Getenv("POSTGRES_PASWORD")
+
+	configuration.Redis.Password = os.Getenv("REDIS_PASSWORD")
 
 	return configuration
 }

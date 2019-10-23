@@ -9,6 +9,19 @@ github.com/gin-gonic/gin
 github.com/gin-gonic/gin/binding
 github.com/gin-gonic/gin/internal/json
 github.com/gin-gonic/gin/render
+# github.com/go-redis/cache/v7 v7.0.2
+github.com/go-redis/cache/v7
+github.com/go-redis/cache/v7/internal
+github.com/go-redis/cache/v7/internal/lrucache
+github.com/go-redis/cache/v7/internal/singleflight
+# github.com/go-redis/redis/v7 v7.0.0-beta.4
+github.com/go-redis/redis/v7
+github.com/go-redis/redis/v7/internal
+github.com/go-redis/redis/v7/internal/consistenthash
+github.com/go-redis/redis/v7/internal/hashtag
+github.com/go-redis/redis/v7/internal/pool
+github.com/go-redis/redis/v7/internal/proto
+github.com/go-redis/redis/v7/internal/util
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
 # github.com/hashicorp/hcl v1.0.0
@@ -103,11 +116,19 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
+# github.com/vmihailenco/msgpack/v4 v4.2.1
+github.com/vmihailenco/msgpack/v4
+github.com/vmihailenco/msgpack/v4/codes
+# github.com/vmihailenco/tagparser v0.1.0
+github.com/vmihailenco/tagparser
+github.com/vmihailenco/tagparser/internal/parser
+github.com/vmihailenco/tagparser/internal
 # golang.org/x/net v0.0.0-20191021144547-ec77196f6094
+golang.org/x/net/context
 golang.org/x/net/html/charset
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20191022100944-742c48ecaeb7
+# golang.org/x/sys v0.0.0-20191023151326-f89234f9a2c2
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
 golang.org/x/text/transform
@@ -128,6 +149,18 @@ golang.org/x/text/runes
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
+# google.golang.org/appengine v1.6.5
+google.golang.org/appengine/datastore
+google.golang.org/appengine
+google.golang.org/appengine/datastore/internal/cloudkey
+google.golang.org/appengine/internal
+google.golang.org/appengine/internal/datastore
+google.golang.org/appengine/internal/app_identity
+google.golang.org/appengine/internal/modules
+google.golang.org/appengine/datastore/internal/cloudpb
+google.golang.org/appengine/internal/base
+google.golang.org/appengine/internal/log
+google.golang.org/appengine/internal/remote_api
 # gopkg.in/fsnotify.v1 v1.4.7
 gopkg.in/fsnotify.v1
 # gopkg.in/go-playground/validator.v8 v8.18.2

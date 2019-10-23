@@ -7,7 +7,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 
-	// "github.com/lib/pq"
 	"gopkg.in/gormigrate.v1"
 	"time"
 	// "instatasks/models"
