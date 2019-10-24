@@ -21,7 +21,7 @@ func InitCache() *cache.Codec {
 
 	if appEnv == "staging" {
 		redisURL := os.Getenv("REDIS_URL")
-		log.Println("REDIS_URL : redisURL")
+		log.Println("REDIS_URL :", redisURL)
 		options, _ = redis.ParseURL(redisURL)
 	} else {
 		options = &redis.Options{
