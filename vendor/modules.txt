@@ -41,6 +41,8 @@ github.com/hpcloud/tail/ratelimiter
 github.com/hpcloud/tail/util
 github.com/hpcloud/tail/watch
 github.com/hpcloud/tail/winfile
+# github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
+github.com/jinzhu/copier
 # github.com/jinzhu/gorm v1.9.11
 github.com/jinzhu/gorm
 github.com/jinzhu/gorm/dialects/postgres

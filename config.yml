@@ -14,3 +14,8 @@ redis:
   min_idle_conns: 50
   max_conn_age:   1
   pool_size: 100
+
+server:
+  cache:
+    new_user_expiration: 12 #hours
+    user_expiration: 2

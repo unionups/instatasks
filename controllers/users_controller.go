@@ -2,26 +2,21 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
-	"instatasks/database"
+	// "github.com/imdario/mergo"
 	. "instatasks/helpers"
 	"instatasks/models"
 	"log"
 	"net/http"
 )
 
-var db *gorm.DB
 var err error
 
-type User = models.User
-
 type Data struct {
-	Data User
+	Data models.User
 }
 
 func GetOrCreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db = database.GetDB()
 		var json Data
 
 		if err = c.ShouldBindJSON(&json); err != nil {
@@ -37,15 +32,8 @@ func GetOrCreateUser() gin.HandlerFunc {
 			return
 		}
 
-		if err = models.FirstNotBannedUserScope(&user, db); err != nil {
-			if gorm.IsRecordNotFoundError(err) {
-				// record not found
-				if err = db.Create(&user).Error; err != nil {
-					c.AbortWithStatusJSON(500, nil)
-					log.Println("DB error: ", err)
-					return
-				}
-			} else if IsStatusForbiddenError(err) {
+		if err = models.FirstNotBannedOrCreateUserScope(&user); err != nil {
+			if IsStatusForbiddenError(err) {
 				c.AbortWithStatusJSON(http.StatusForbidden, nil)
 				log.Println("Error: Banned")
 				return

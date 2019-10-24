@@ -1,0 +1,10 @@
+FROM golang:alpine
+
+WORKDIR /go/src/instatasks
+
+RUN apk --no-cache add build-base
+
+COPY . /go/src/instatasks
+
+CMD go test
+

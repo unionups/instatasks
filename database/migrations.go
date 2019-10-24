@@ -22,7 +22,7 @@ func migrate() {
 				// it's a good pratice to copy the struct inside the function,
 				// so side effects are prevented if the original struct changes during the time
 				type User struct {
-					Instagramid uint `json:"instagramid" binding:"required" gorm:"primary_key" `
+					Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key" `
 					CreatedAt   time.Time
 					UpdatedAt   time.Time
 					DeletedAt   *time.Time `sql:"index"`

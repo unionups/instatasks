@@ -1,0 +1,50 @@
+version: '3.2'
+
+services:
+
+  redis: 
+    container_name: redis_instatasksdb
+    image: redis:alpine
+    hostname: redis
+    restart: always
+    env_file: 
+      - .env
+    networks:
+      - test_instatasksnet
+    command:
+      - 'redis-server'
+      - '--loglevel notice'
+      - '--databases ${REDIS_DATABASES:-2}'
+      - '--appendonly ${REDIS_APPENDONLY:-no}'
+      - '--maxmemory ${REDIS_MAXMEM:-100mb}'
+      - '--maxmemory-policy ${REDIS_POLICY:-volatile-lfu}'
+      - '--requirepass ${REDIS_PASSWORD}'
+
+
+  web_test:
+    container_name: instatasks_test
+    hostname: instatasks
+    restart: "no"
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    env_file: 
+      - .env
+    environment:
+      - APP_ENV=test
+    volumes:
+      - .:/go/src/instatasks
+    networks:
+      - test_instatasksnet
+    depends_on:
+      - redis
+    links:
+      - redis
+    labels:
+      kompose.service.type: LoadBalancer
+
+networks:
+  test_instatasksnet:
+    driver: bridge
+volumes:
+  .:

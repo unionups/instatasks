@@ -1,6 +1,9 @@
 package helpers
 
-import "reflect"
+import (
+	"reflect"
+	"time"
+)
 
 func IsItemInSlice(slice interface{}, item interface{}) bool {
 	s := reflect.ValueOf(slice)
@@ -16,4 +19,8 @@ func IsItemInSlice(slice interface{}, item interface{}) bool {
 	}
 
 	return false
+}
+
+func DurationInHours(i int) time.Duration {
+	return time.Duration(i) * time.Hour
 }

@@ -1,13 +1,19 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm"
+	"github.com/go-redis/cache/v7"
+	// "github.com/jinzhu/gorm"
+	"github.com/jinzhu/copier"
+	"instatasks/config"
+	"instatasks/database"
 	. "instatasks/helpers"
+	"instatasks/redis_storage"
+	"strconv"
 	"time"
 )
 
 type User struct {
-	Instagramid uint `json:"instagramid" binding:"required" gorm:"primary_key" `
+	Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key" `
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time `sql:"index"`
@@ -17,31 +23,74 @@ type User struct {
 	Rateus      bool       `json:"rateus" gorm:"default:true"`
 }
 
-func FirstNotBannedUserScope(user *User, db *gorm.DB) error {
+type CachedUser struct {
+	Banned bool
+	Coins  int
+	Rateus bool
+}
 
-	tx := db.Begin()
+func FirstNotBannedOrCreateUserScope(user *User) error {
 
-	if tx.Error != nil {
-		tx.Rollback()
-		return tx.Error
+	FirstOrCreateUser(user)
+
+	if user.Banned {
+		return ErrStatusForbidden
 	}
 
-	if err := tx.First(&user).Error; err != nil {
-		if !tx.First(&BannedDevice{Deviceid: user.Deviceid}).RecordNotFound() {
-			tx.Rollback()
-			return ErrStatusForbidden
-		}
-		tx.Rollback()
+	db := database.GetDB()
+	if !db.First(&BannedDevice{Deviceid: user.Deviceid}).RecordNotFound() {
+		return ErrStatusForbidden
+	}
+	return nil
+}
+
+func FirstOrCreateUser(user *User) error {
+	var cachedUser CachedUser
+
+	redis_cache := redis_storage.GetRedisCache()
+
+	if err := redis_cache.Once(&cache.Item{
+		Key:        getIdString(user),
+		Object:     &cachedUser,
+		Expiration: DurationInHours(config.GetConfig().Server.Cache.NewUserExpiration),
+		Func: func() (interface{}, error) {
+			db := database.GetDB()
+			if db.First(user).RecordNotFound() {
+				if err := db.Create(user).Error; err != nil {
+					return nil, err
+				}
+			}
+			copier.Copy(&cachedUser, user)
+			return cachedUser, nil
+		},
+	}); err != nil {
 		return err
-	} else if user.Banned {
-		tx.Rollback()
-		return ErrStatusForbidden
+	}
+	copier.Copy(user, &cachedUser)
+	return nil
+}
+
+func SaveUser(user *User) error {
+
+	db := database.GetDB()
+	redis_cache := redis_storage.GetRedisCache()
+
+	if err := db.Save(&user).Error; err != nil {
+		return err
 	}
 
-	if !tx.First(&BannedDevice{Deviceid: user.Deviceid}).RecordNotFound() {
-		tx.Rollback()
-		return ErrStatusForbidden
-	}
+	cachedUser := CachedUser{}
+	copier.Copy(&cachedUser, user)
 
-	return tx.Commit().Error
+	redis_cache.Set(&cache.Item{
+		Key:        getIdString(user),
+		Object:     &cachedUser,
+		Expiration: DurationInHours(config.GetConfig().Server.Cache.UserExpiration),
+	})
+
+	return nil
+}
+
+func getIdString(user *User) string {
+	return strconv.FormatUint(user.Instagramid, 10)
 }

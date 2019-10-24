@@ -13,7 +13,10 @@ type Configuration struct {
 	AppEnv   string
 }
 
-func InitConfig() Configuration {
+var Config *Configuration
+
+func InitConfig() *Configuration {
+
 	var configuration Configuration
 
 	viper.SetConfigName("config")
@@ -36,5 +39,11 @@ func InitConfig() Configuration {
 
 	configuration.Redis.Password = os.Getenv("REDIS_PASSWORD")
 
-	return configuration
+	Config = &configuration
+
+	return Config
+}
+
+func GetConfig() *Configuration {
+	return Config
 }

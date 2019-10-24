@@ -10,11 +10,13 @@ import (
 	. "github.com/onsi/gomega"
 	"instatasks/database"
 	"instatasks/models"
+	"instatasks/redis_storage"
 	"instatasks/router"
 	. "instatasks/test_helpers"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	// "strconv"
 	"testing"
 )
 
@@ -35,6 +37,7 @@ var _ = BeforeSuite(func() {
 	r = router.SetupRouter()
 	db = database.InitDB()
 	autocleaner = DatabaseAutocleaner(db)
+	redis_storage.InitCache()
 })
 
 var _ = AfterSuite(func() {
@@ -88,7 +91,8 @@ var _ = Describe("Instatasks API", func() {
 				"rateus":      true
 			}`)
 
-			It("must create User if not exist  and return default User data", func() {
+			It("must create User if not exist  and return default User data, must be cached", func() {
+				var cachedUser models.CachedUser
 
 				Ω(db.First(&models.User{Instagramid: 666}).RecordNotFound()).Should(BeTrue())
 
@@ -97,8 +101,12 @@ var _ = Describe("Instatasks API", func() {
 				r.ServeHTTP(w, req)
 
 				Ω(db.First(&models.User{Instagramid: 666}).RecordNotFound()).Should(BeFalse())
+				cache := redis_storage.GetRedisCache()
+				cache.Get("666", &cachedUser)
+
 				Ω(w.Code).Should(Equal(http.StatusOK))
 				Ω(w.Body).Should(MatchUnorderedJSON(expected_response))
+				Ω(cachedUser).Should(Equal(models.CachedUser{false, 0, true}))
 			})
 
 			It("if User exist: return User data", func() {
@@ -129,7 +137,7 @@ var _ = Describe("Instatasks API", func() {
 				var bannedUser models.User
 				db.First(&bannedUser)
 				bannedUser.Banned = true
-				db.Save(&bannedUser)
+				models.SaveUser(&bannedUser)
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)
