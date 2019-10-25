@@ -4,11 +4,16 @@ github.com/benjamintf1/unmarshalledmatchers
 github.com/fsnotify/fsnotify
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
-# github.com/gin-gonic/gin v1.4.0
+# github.com/gin-gonic/gin v1.4.1-0.20191017021444-0ce46610292c
 github.com/gin-gonic/gin
 github.com/gin-gonic/gin/binding
 github.com/gin-gonic/gin/internal/json
 github.com/gin-gonic/gin/render
+# github.com/go-playground/locales v0.13.0
+github.com/go-playground/locales
+github.com/go-playground/locales/currency
+# github.com/go-playground/universal-translator v0.16.0
+github.com/go-playground/universal-translator
 # github.com/go-redis/cache/v7 v7.0.2
 github.com/go-redis/cache/v7
 github.com/go-redis/cache/v7/internal
@@ -54,6 +59,8 @@ github.com/joho/godotenv/autoload
 github.com/joho/godotenv
 # github.com/json-iterator/go v1.1.7
 github.com/json-iterator/go
+# github.com/leodido/go-urn v1.2.0
+github.com/leodido/go-urn
 # github.com/lib/pq v1.2.0
 github.com/lib/pq
 github.com/lib/pq/hstore
@@ -130,7 +137,7 @@ golang.org/x/net/context
 golang.org/x/net/html/charset
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20191023151326-f89234f9a2c2
+# golang.org/x/sys v0.0.0-20191024172528-b4ff53e7a1cb
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
 golang.org/x/text/transform
@@ -165,8 +172,8 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 # gopkg.in/fsnotify.v1 v1.4.7
 gopkg.in/fsnotify.v1
-# gopkg.in/go-playground/validator.v8 v8.18.2
-gopkg.in/go-playground/validator.v8
+# gopkg.in/go-playground/validator.v9 v9.30.0
+gopkg.in/go-playground/validator.v9
 # gopkg.in/gormigrate.v1 v1.6.0
 gopkg.in/gormigrate.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7

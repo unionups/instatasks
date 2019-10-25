@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"instatasks/config"
 	"instatasks/database"
 	"instatasks/models"
 	"instatasks/redis_storage"
@@ -34,6 +35,7 @@ func TestInstatasks(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	os.Setenv("APP_ENV", "test")
+	config.InitConfig()
 	r = router.SetupRouter()
 	db = database.InitDB()
 	autocleaner = DatabaseAutocleaner(db)
@@ -50,7 +52,7 @@ var _ = Describe("Instatasks API", func() {
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
 	})
-
+	//////////////////////////////////////////////////////////////
 	Describe("Ping (GET /ping) route", func() {
 		Context("When ping succesfully", func() {
 			It("Should return Ok code", func() {
@@ -67,11 +69,11 @@ var _ = Describe("Instatasks API", func() {
 				r.ServeHTTP(w, req)
 
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(w.Body.String()).Should(Equal("{\"message\":\"pong\"}"))
+				Ω(w.Body.String()).Should(Equal("{\"message\":\"pong\"}\n"))
 			})
 		})
 	})
-
+	/////////////////////////////////////////////////////////////
 	Describe("Accaunt (POST /accaunt) route", func() {
 		reqBody := []byte(`{ "data": {
 			"instagramid": 666,
@@ -161,6 +163,48 @@ var _ = Describe("Instatasks API", func() {
 				r.ServeHTTP(w, req)
 
 				Ω(w.Code).Should(Equal(http.StatusForbidden))
+			})
+		})
+	})
+})
+
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+
+var _ = Describe("Instatasks Admin API. Admin (/admin) protected route group", func() {
+
+	BeforeEach(func() {
+		w = httptest.NewRecorder()
+	})
+
+	/////////////////////////////////////////////////////////////
+	Describe("Create UserAgent (POST /admin/useragent) protected route", func() {
+
+		Context("Unauthorized Admin", func() {
+
+			It("must 401 Unauthorized", func() {
+				req, _ := http.NewRequest("POST", "/admin/useragent", nil)
+				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("Authorization", AuthorizationHeader("wrongname", "wrongpass"))
+				r.ServeHTTP(w, req)
+
+				Ω(w.Code).Should(Equal(http.StatusUnauthorized))
+			})
+		})
+
+		Context("Authorized Admin", func() {
+
+			It("must generate rsa keys, AES encript rsa keys, create UserAgent (with default value) in DB", func() {
+				validSuperadminUsername := config.GetConfig().Server.Superadmin.Username
+				validSuperadminPassword := config.GetConfig().Server.Superadmin.Password
+
+				req, _ := http.NewRequest("POST", "/admin/useragent", nil)
+				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("Authorization", AuthorizationHeader(validSuperadminUsername, validSuperadminPassword))
+				r.ServeHTTP(w, req)
+
+				Ω(w.Code).Should(Equal(http.StatusOK))
 			})
 		})
 	})

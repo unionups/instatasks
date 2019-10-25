@@ -15,7 +15,7 @@ type Data struct {
 	Data models.User
 }
 
-func GetOrCreateUser() gin.HandlerFunc {
+func ShowOrCreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var json Data
 

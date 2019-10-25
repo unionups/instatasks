@@ -5,7 +5,14 @@ type Cache struct {
 	UserExpiration    int
 }
 
+type Superadmin struct {
+	Username string
+	Password string
+}
+
 type ServerConfiguration struct {
-	Port string
+	Port          string
+	AesPassphrase string
+	Superadmin
 	Cache
 }

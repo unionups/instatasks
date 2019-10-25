@@ -19,3 +19,4 @@ server:
   cache:
     new_user_expiration: 12 #hours
     user_expiration: 2
+  

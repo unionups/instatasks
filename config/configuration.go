@@ -32,8 +32,14 @@ func InitConfig() *Configuration {
 		log.Fatalf("Unable to decode into struct, %v", err)
 	}
 
-	configuration.Server.Port = os.Getenv("PORT")
 	configuration.AppEnv = os.Getenv("APP_ENV")
+
+	configuration.Server.Port = os.Getenv("PORT")
+
+	configuration.Server.AesPassphrase = os.Getenv("AES_PASSPHRASE")
+	configuration.Server.Superadmin.Username = os.Getenv("SUPERADMIN_USERNAME")
+	configuration.Server.Superadmin.Password = os.Getenv("SUPERADMIN_PASSWORD")
+
 	configuration.Database.Username = os.Getenv("POSTGRES_USER")
 	configuration.Database.Password = os.Getenv("POSTGRES_PASWORD")
 
