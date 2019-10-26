@@ -58,8 +58,8 @@ func migrate() {
 				type RsaKey struct {
 					Name string `header:"User-Agent" json:"name" binding:"required" gorm:"primary_key"`
 
-					RsaPrivateKeyAesEncripted []byte `gorm:"type:byte[];not null;"`
-					RsaPublicKeyAesEncripted  []byte `gorm:"type:byte[];not null;"`
+					RsaPrivateKeyAesEncripted []byte `gorm:"not null"`
+					RsaPublicKeyAesEncripted  []byte `gorm:"not null"`
 				}
 				type UserAgent struct {
 					Name      string `header:"User-Agent" json:"name" binding:"required"  gorm:"primary_key"`
@@ -88,8 +88,8 @@ func migrate() {
 				type RsaKey struct {
 					Name string `header:"User-Agent"  gorm:"primary_key"`
 
-					RsaPrivateKeyAesEncripted []byte `gorm:"type:byte[];not null;"`
-					RsaPublicKeyAesEncripted  []byte `gorm:"type:byte[];not null;"`
+					RsaPrivateKeyAesEncripted []byte `gorm:"not null"`
+					RsaPublicKeyAesEncripted  []byte `gorm:"not null"`
 				}
 				return tx.AutoMigrate(&RsaKey{}).Error
 			},
