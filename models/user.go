@@ -2,11 +2,11 @@ package models
 
 import (
 	"github.com/go-redis/cache/v7"
+	. "instatasks/helpers"
 	// "github.com/jinzhu/gorm"
 	"github.com/jinzhu/copier"
 	"instatasks/config"
 	"instatasks/database"
-	. "instatasks/helpers"
 	"instatasks/redis_storage"
 	"strconv"
 	"time"
@@ -75,7 +75,7 @@ func SaveUser(user *User) error {
 	db := database.GetDB()
 	redis_cache := redis_storage.GetRedisCache()
 
-	if err := db.Save(&user).Error; err != nil {
+	if err := db.Save(user).Error; err != nil {
 		return err
 	}
 

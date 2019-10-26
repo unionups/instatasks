@@ -7,8 +7,7 @@ type DatabaseConfiguration struct {
 	Password string
 	Host     string
 	Port     string
-	LogMode  bool
 	// connection pool
-	MaxOpenConns int
-	MaxIdleConns int
+	MaxOpenConns int `mapstructure:"max_open_conns"`
+	MaxIdleConns int `mapstructure:"max_idle_conns"`
 }

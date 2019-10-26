@@ -1,8 +1,8 @@
 package config
 
 type Cache struct {
-	NewUserExpiration int
-	UserExpiration    int
+	NewUserExpiration int `mapstructure:"new_user_expiration"`
+	UserExpiration    int `mapstructure:"user_expiration"`
 }
 
 type Superadmin struct {
@@ -13,6 +13,7 @@ type Superadmin struct {
 type ServerConfiguration struct {
 	Port          string
 	AesPassphrase string
+	RsaKeySize    int `mapstructure:"rsa_key_size"`
 	Superadmin
 	Cache
 }

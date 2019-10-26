@@ -21,14 +21,15 @@ func SetupRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
 
-	router.POST("/accaunt", controllers.ShowOrCreateUser())
-	router.POST("/setting", controllers.ShowUseragent())
+	router.POST("/accaunt", controllers.GetOrCreateUser())
+	router.POST("/setting", controllers.GetUseragent())
 
 	authorized := router.Group("/admin", gin.BasicAuth(gin.Accounts{
 		serverConfig.Superadmin.Username: serverConfig.Superadmin.Password,
 	}))
 
 	authorized.POST("/useragent", controllers.CreateUseragent())
+	authorized.GET("/useragent/pkey", controllers.GetRsaPublicKey())
 
 	Router = router
 

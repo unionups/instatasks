@@ -16,7 +16,9 @@ redis:
   pool_size: 100
 
 server:
+  rsa_key_size: 2048 #bytes
   cache:
-    new_user_expiration: 12 #hours
+    #expiration hours
+    new_user_expiration: 12 
     user_expiration: 2
   

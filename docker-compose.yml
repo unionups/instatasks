@@ -63,8 +63,8 @@ services:
       - .env
     networks:
       - instatasksnet
-    volumes:
-      - .:/go/src/instatasks
+    # volumes:
+    #   - .:/go/src/instatasks
     ports:
       - 8080:8080
     # swarm mode 

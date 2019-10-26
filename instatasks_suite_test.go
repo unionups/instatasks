@@ -18,6 +18,7 @@ import (
 	"net/http/httptest"
 	"os"
 	// "strconv"
+	// "fmt"
 	"testing"
 )
 
@@ -69,7 +70,7 @@ var _ = Describe("Instatasks API", func() {
 				r.ServeHTTP(w, req)
 
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(w.Body.String()).Should(Equal("{\"message\":\"pong\"}\n"))
+				Ω(w.Body).Should(MatchUnorderedJSON(`{"message":"pong"}`))
 			})
 		})
 	})
@@ -135,7 +136,7 @@ var _ = Describe("Instatasks API", func() {
 
 		Context("Banned User/Device", func() {
 
-			It("bunned User must force ForbiddenError response status", func() {
+			It("banned User must force ForbiddenError response status", func() {
 				var bannedUser models.User
 				db.First(&bannedUser)
 				bannedUser.Banned = true
@@ -166,6 +167,23 @@ var _ = Describe("Instatasks API", func() {
 			})
 		})
 	})
+
+	/////////////////////////////////////////////////////////////
+	Describe("User Agent settings (POST /setting) route", func() {
+		It("must return User Agent settings", func() {
+			userAgent := models.UserAgent{Name: "user_agent_with_default_settings"}
+			db.Save(&userAgent)
+
+			req, _ := http.NewRequest("POST", "/setting", nil)
+			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
+			r.ServeHTTP(w, req)
+
+			Ω(w.Code).Should(Equal(http.StatusOK))
+			Ω(w.Body).Should(ContainUnorderedJSON(`{"activitylimit": 0, "like": true }`))
+		})
+
+	})
 })
 
 /////////////////////////////////////////////////////////////
@@ -179,7 +197,7 @@ var _ = Describe("Instatasks Admin API. Admin (/admin) protected route group", f
 	})
 
 	/////////////////////////////////////////////////////////////
-	Describe("Create UserAgent (POST /admin/useragent) protected route", func() {
+	Describe("UserAgent (/admin/useragent) protected route", func() {
 
 		Context("Unauthorized Admin", func() {
 
@@ -198,13 +216,33 @@ var _ = Describe("Instatasks Admin API. Admin (/admin) protected route group", f
 			It("must generate rsa keys, AES encript rsa keys, create UserAgent (with default value) in DB", func() {
 				validSuperadminUsername := config.GetConfig().Server.Superadmin.Username
 				validSuperadminPassword := config.GetConfig().Server.Superadmin.Password
+				reqBody := []byte(`{ "data": {
+					"name": "useragent1",
+					"activitylimit": 1
+				}
+				}`)
 
-				req, _ := http.NewRequest("POST", "/admin/useragent", nil)
+				req, _ := http.NewRequest("POST", "/admin/useragent", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)
 				req.Header.Add("Authorization", AuthorizationHeader(validSuperadminUsername, validSuperadminPassword))
 				r.ServeHTTP(w, req)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
+				Ω(w.Body).Should(ContainUnorderedJSON(`{"name": "useragent1", "activitylimit": 1, "like": true }`))
+			})
+
+			It("must get RSA Public Key (GET /admin/useragent/pkey)", func() {
+				validSuperadminUsername := config.GetConfig().Server.Superadmin.Username
+				validSuperadminPassword := config.GetConfig().Server.Superadmin.Password
+				reqBody := []byte(`{"name": "useragent1"}`)
+
+				req, _ := http.NewRequest("GET", "/admin/useragent/pkey", bytes.NewBuffer(reqBody))
+				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("Authorization", AuthorizationHeader(validSuperadminUsername, validSuperadminPassword))
+				r.ServeHTTP(w, req)
+
+				Ω(w.Code).Should(Equal(http.StatusOK))
+				Ω(w.Body.String()).Should(ContainSubstring("BEGIN RSA PUBLIC KEY"))
 			})
 		})
 	})

@@ -2,22 +2,22 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	// "github.com/imdario/mergo"
 	. "instatasks/helpers"
 	"instatasks/models"
-	"log"
 	"net/http"
+
+	"log"
 )
 
 var err error
 
-type Data struct {
+type UserData struct {
 	Data models.User
 }
 
-func ShowOrCreateUser() gin.HandlerFunc {
+func GetOrCreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var json Data
+		var json UserData
 
 		if err = c.ShouldBindJSON(&json); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
