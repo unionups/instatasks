@@ -21,10 +21,11 @@ func GetOrCreateUser() gin.HandlerFunc {
 
 		if err = c.ShouldBindJSON(&json); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			panic(err)
 			return
 		}
 
-		user := json.Data
+		user := &json.Data
 
 		if user.Deviceid == "" {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Request must have Devise ID"})
@@ -32,7 +33,7 @@ func GetOrCreateUser() gin.HandlerFunc {
 			return
 		}
 
-		if err = models.FirstNotBannedOrCreateUserScope(&user); err != nil {
+		if err = user.FirstNotBannedOrCreate(); err != nil {
 			if IsStatusForbiddenError(err) {
 				c.AbortWithStatusJSON(http.StatusForbidden, nil)
 				log.Println("Error: Banned")

@@ -10,46 +10,43 @@ import (
 	"os"
 )
 
-var RedisCache *cache.Codec
+type (
+	CacheCodec = cache.Codec
+	CacheItem  = cache.Item
+)
 
-func InitCache() *cache.Codec {
-	var codec = RedisCache
-	var options *redis.Options
+var CacheCodecs = make(map[string]*cache.Codec)
 
-	config := config.InitConfig()
-	appEnv := config.AppEnv
+func GetCacheCodec(key string) *cache.Codec {
+	return CacheCodecs[key]
+}
 
-	if appEnv == "staging" {
+func GetOptions(db int) *redis.Options {
+
+	var opt *redis.Options
+
+	conf := config.GetConfig()
+
+	if conf.AppEnv == "staging" {
 		redisURL := os.Getenv("REDIS_URL")
-		options, _ = redis.ParseURL(redisURL)
+		opt, _ = redis.ParseURL(redisURL)
+		opt.DB = db
 	} else {
-		options = &redis.Options{
-			Addr:         config.Redis.Addr,
-			Password:     config.Redis.Password,
-			DB:           0,
-			PoolSize:     config.Redis.PoolSize,
-			MinIdleConns: config.Redis.MinIdleConns,
+		opt = &redis.Options{
+			Addr:         conf.Redis.Addr,
+			Password:     conf.Redis.Password,
+			DB:           db,
+			PoolSize:     conf.Redis.PoolSize,
+			MinIdleConns: conf.Redis.MinIdleConns,
 		}
 	}
 
-	client := redis.NewClient(options)
-	// ring := redis.NewRing(&redis.RingOptions{
-	// 	Addrs: map[string]string{
-	// 		"redis": ":6379",
-	// 		"redis2": ":6380",
-	// 	},
-	// })
+	return opt
+}
 
-	pong, err := client.Ping().Result()
-	log.Println(pong)
+func GetCodec(client *redis.Client) *cache.Codec {
+	return &cache.Codec{
 
-	if err != nil {
-		panic(err)
-		panic("failed to connect database")
-	}
-
-	codec = &cache.Codec{
-		// Redis: ring,
 		Redis: client,
 
 		Marshal: func(v interface{}) ([]byte, error) {
@@ -59,12 +56,25 @@ func InitCache() *cache.Codec {
 			return msgpack.Unmarshal(b, v)
 		},
 	}
-
-	RedisCache = codec
-
-	return RedisCache
 }
 
-func GetRedisCache() *cache.Codec {
-	return RedisCache
+func RegisterCacheCodec(key string) *cache.Codec {
+	db_count := len(CacheCodecs)
+
+	options := GetOptions(db_count)
+	client := redis.NewClient(options)
+
+	pong, err := client.Ping().Result()
+	log.Println(pong)
+
+	if err != nil {
+		panic(err)
+		panic("failed to connect database")
+	}
+
+	cdc := GetCodec(client)
+
+	CacheCodecs[key] = cdc
+
+	return cdc
 }

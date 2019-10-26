@@ -40,7 +40,8 @@ var _ = BeforeSuite(func() {
 	r = router.SetupRouter()
 	db = database.InitDB()
 	autocleaner = DatabaseAutocleaner(db)
-	redis_storage.InitCache()
+	// redis_storage.InitCache()
+	models.InitCache()
 })
 
 var _ = AfterSuite(func() {
@@ -104,7 +105,7 @@ var _ = Describe("Instatasks API", func() {
 				r.ServeHTTP(w, req)
 
 				Ω(db.First(&models.User{Instagramid: 666}).RecordNotFound()).Should(BeFalse())
-				cache := redis_storage.GetRedisCache()
+				cache := redis_storage.GetCacheCodec("User")
 				cache.Get("666", &cachedUser)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
@@ -140,7 +141,7 @@ var _ = Describe("Instatasks API", func() {
 				var bannedUser models.User
 				db.First(&bannedUser)
 				bannedUser.Banned = true
-				models.SaveUser(&bannedUser)
+				bannedUser.Save()
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)

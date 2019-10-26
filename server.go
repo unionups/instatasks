@@ -7,7 +7,8 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"instatasks/config"
 	"instatasks/database"
-	"instatasks/redis_storage"
+	// "instatasks/redis_storage"
+	"instatasks/models"
 	"instatasks/router"
 	"log"
 	"net/http"
@@ -27,7 +28,8 @@ func main() {
 	db.DB().Ping()
 	defer db.Close()
 
-	redis_storage.InitCache()
+	// redis_storage.InitCache()
+	models.InitCache()
 
 	if config.AppEnv != "development" {
 		gin.SetMode(gin.ReleaseMode)

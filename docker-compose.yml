@@ -44,7 +44,7 @@ services:
     command:
       - 'redis-server'
       - '--loglevel ${REDIS_LOGLEVEL:-warning}'
-      - '--databases ${REDIS_DATABASES:-2}'
+      # - '--databases ${REDIS_DATABASES:-2}'
       - '--appendonly ${REDIS_APPENDONLY:-no}'
       - '--maxmemory ${REDIS_MAXMEM:-100mb}'
       - '--maxmemory-policy ${REDIS_POLICY:-volatile-lfu}'

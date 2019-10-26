@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/go-redis/cache/v7"
 	. "instatasks/helpers"
 	// "github.com/jinzhu/gorm"
 	"github.com/jinzhu/copier"
@@ -20,7 +19,7 @@ type User struct {
 	Banned      bool       `gorm:"default:false"`
 	Coins       int        `json:"coins" gorm:"default:0"`
 	Deviceid    string     `json:"deviceid" gorm:"-"`
-	Rateus      bool       `json:"rateus" gorm:"default:true"`
+	Rateus      bool       `binding:"-" gorm:"default:true"`
 }
 
 type CachedUser struct {
@@ -29,28 +28,36 @@ type CachedUser struct {
 	Rateus bool
 }
 
-func FirstNotBannedOrCreateUserScope(user *User) error {
+var (
+	RedisCacheCodec *redis_storage.CacheCodec
+)
 
-	FirstOrCreateUser(user)
+func InitUserCache() {
+	RedisCacheCodec = redis_storage.RegisterCacheCodec("User")
+}
+
+func (user *User) FirstNotBannedOrCreate() (err error) {
+
+	user.FirstOrCreate()
 
 	if user.Banned {
-		return ErrStatusForbidden
+		err = ErrStatusForbidden
+		return
 	}
 
 	db := database.GetDB()
 	if !db.First(&BannedDevice{Deviceid: user.Deviceid}).RecordNotFound() {
-		return ErrStatusForbidden
+		err = ErrStatusForbidden
+		return
 	}
-	return nil
+	return
 }
 
-func FirstOrCreateUser(user *User) error {
+func (user *User) FirstOrCreate() (err error) {
 	var cachedUser CachedUser
 
-	redis_cache := redis_storage.GetRedisCache()
-
-	if err := redis_cache.Once(&cache.Item{
-		Key:        getIdString(user),
+	if err = RedisCacheCodec.Once(&redis_storage.CacheItem{
+		Key:        user.getIdString(),
 		Object:     &cachedUser,
 		Expiration: DurationInHours(config.GetConfig().Server.Cache.NewUserExpiration),
 		Func: func() (interface{}, error) {
@@ -64,33 +71,32 @@ func FirstOrCreateUser(user *User) error {
 			return cachedUser, nil
 		},
 	}); err != nil {
-		return err
+		return
 	}
-	copier.Copy(user, &cachedUser)
-	return nil
+	copier.Copy(&user, &cachedUser)
+	return
 }
 
-func SaveUser(user *User) error {
+func (user *User) Save() (err error) {
 
 	db := database.GetDB()
-	redis_cache := redis_storage.GetRedisCache()
 
-	if err := db.Save(user).Error; err != nil {
-		return err
+	if err = db.Save(user).Error; err != nil {
+		return
 	}
 
 	cachedUser := CachedUser{}
 	copier.Copy(&cachedUser, user)
 
-	redis_cache.Set(&cache.Item{
-		Key:        getIdString(user),
+	RedisCacheCodec.Set(&redis_storage.CacheItem{
+		Key:        user.getIdString(),
 		Object:     &cachedUser,
 		Expiration: DurationInHours(config.GetConfig().Server.Cache.UserExpiration),
 	})
 
-	return nil
+	return
 }
 
-func getIdString(user *User) string {
+func (user *User) getIdString() string {
 	return strconv.FormatUint(user.Instagramid, 10)
 }
