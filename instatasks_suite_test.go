@@ -41,7 +41,7 @@ var _ = BeforeSuite(func() {
 	db = database.InitDB()
 	autocleaner = DatabaseAutocleaner(db)
 	// redis_storage.InitCache()
-	models.InitCache()
+	models.Init()
 })
 
 var _ = AfterSuite(func() {
@@ -172,8 +172,8 @@ var _ = Describe("Instatasks API", func() {
 	/////////////////////////////////////////////////////////////
 	Describe("User Agent settings (POST /setting) route", func() {
 		It("must return User Agent settings", func() {
-			userAgent := models.UserAgent{Name: "user_agent_with_default_settings"}
-			db.Save(&userAgent)
+			userAgent := &models.UserAgent{Name: "user_agent_with_default_settings"}
+			userAgent.Save()
 
 			req, _ := http.NewRequest("POST", "/setting", nil)
 			req.Header.Add("Content-Type", `application/json`)

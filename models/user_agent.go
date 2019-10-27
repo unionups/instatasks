@@ -1,8 +1,9 @@
 package models
 
 import (
-	"instatasks/config"
+	"github.com/jinzhu/copier"
 	. "instatasks/helpers"
+	"sync"
 	"time"
 )
 
@@ -21,22 +22,91 @@ type UserAgent struct {
 	RsaKey RsaKey `gorm:"foreignkey:Name;association_foreignkey:Name"`
 }
 
+type CachedUserAgentSettings struct {
+	Activitylimit uint
+	Like          bool
+	Follow        bool
+	Pricefollow   uint
+	Pricelike     uint
+}
+
+type CachedPrice struct {
+	Pricefollow uint
+	Pricelike   uint
+}
+
+var (
+	cachedUserAgentSettings = make(map[string]*CachedUserAgentSettings)
+	cachedPrice             = make(map[string]*CachedPrice)
+	cachedRSAPrivateKey     = make(map[string]*RSAPrivateKey)
+	mx                      sync.Mutex
+)
+
+func InitUserAgentCache() {
+
+	var userAgents []UserAgent
+
+	DB.Set("gorm:auto_preload", true).Find(&userAgents)
+
+	mx.Lock()
+	defer mx.Unlock()
+
+	for _, userAgent := range userAgents {
+		cachedUserAgentSettings[userAgent.Name] = &CachedUserAgentSettings{
+			Activitylimit: userAgent.Activitylimit,
+			Like:          userAgent.Like,
+			Follow:        userAgent.Follow,
+			Pricefollow:   userAgent.Pricefollow,
+			Pricelike:     userAgent.Pricelike,
+		}
+
+		cachedPrice[userAgent.Name] = &CachedPrice{
+			Pricefollow: userAgent.Pricefollow,
+			Pricelike:   userAgent.Pricelike,
+		}
+
+		rsa_private_key_bytes := AesDecrypt(userAgent.RsaKey.RsaPrivateKeyAesEncripted, ServerConfig.AesPassphrase)
+
+		cachedRSAPrivateKey[userAgent.Name] = BytesToPrivateKey(rsa_private_key_bytes)
+	}
+}
+
 func (ua *UserAgent) BeforeCreate() (err error) {
 
-	serverConfig := config.GetConfig().Server
-
-	rsa_private_key, rsa_public_key := GenerateKeyPair(serverConfig.RsaKeySize)
+	rsa_private_key, rsa_public_key := GenerateKeyPair(ServerConfig.RsaKeySize)
 
 	rsa_private_key_bytes := PrivateKeyToBytes(rsa_private_key)
 	rsa_public_key_bytes := PublicKeyToBytes(rsa_public_key)
 
-	aes_encripted_rsa_private_key_bytes := AesEncrypt(rsa_private_key_bytes, serverConfig.AesPassphrase)
-	aes_encripted_rsa_public_key_bytes := AesEncrypt(rsa_public_key_bytes, serverConfig.AesPassphrase)
+	aes_encripted_rsa_private_key_bytes := AesEncrypt(rsa_private_key_bytes, ServerConfig.AesPassphrase)
+	aes_encripted_rsa_public_key_bytes := AesEncrypt(rsa_public_key_bytes, ServerConfig.AesPassphrase)
 
 	ua.RsaKey = RsaKey{
 		RsaPrivateKeyAesEncripted: aes_encripted_rsa_private_key_bytes,
 		RsaPublicKeyAesEncripted:  aes_encripted_rsa_public_key_bytes,
 	}
 
+	return
+}
+
+func (userAgent *UserAgent) FindSettings() (err error) {
+
+	if cUAS, ok := cachedUserAgentSettings[userAgent.Name]; !ok {
+		if DB.First(userAgent).RecordNotFound() {
+			err = ErrStatusForbidden
+			return
+		} else {
+			userAgent.Save()
+			return
+		}
+	} else {
+		copier.Copy(userAgent, cUAS)
+	}
+	return
+}
+
+func (userAgent *UserAgent) Save() (err error) {
+	DB.Save(userAgent)
+	InitUserAgentCache()
 	return
 }

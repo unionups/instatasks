@@ -23,15 +23,13 @@ func GetUseragent() gin.HandlerFunc {
 
 		var userAgent UserAgent
 
-		db := database.GetDB()
-
 		if err := c.ShouldBindHeader(&userAgent); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			log.Println("Error: ", err.Error())
 			return
 		}
 
-		if err := db.First(&userAgent).Error; err != nil {
+		if err := userAgent.FindSettings(); err != nil {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Uncnown User-Agent"})
 			log.Println("Error: Uncnown User-Agent")
 			return

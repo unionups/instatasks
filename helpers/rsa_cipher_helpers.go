@@ -10,6 +10,8 @@ import (
 	"log"
 )
 
+type RSAPrivateKey = rsa.PrivateKey
+
 func GenerateKeyPair(bits int) (*rsa.PrivateKey, *rsa.PublicKey) {
 	privkey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {

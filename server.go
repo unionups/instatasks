@@ -28,8 +28,7 @@ func main() {
 	db.DB().Ping()
 	defer db.Close()
 
-	// redis_storage.InitCache()
-	models.InitCache()
+	models.Init()
 
 	if config.AppEnv != "development" {
 		gin.SetMode(gin.ReleaseMode)
