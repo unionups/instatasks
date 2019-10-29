@@ -23,6 +23,8 @@ func SetupRouter() *gin.Engine {
 
 	router.POST("/accaunt", controllers.GetOrCreateUser())
 	router.POST("/setting", controllers.GetUseragent())
+	router.POST("/newwork", controllers.CreateTask())
+	router.POST("/history", controllers.GetHistory())
 
 	authorized := router.Group("/admin", gin.BasicAuth(gin.Accounts{
 		serverConfig.Superadmin.Username: serverConfig.Superadmin.Password,

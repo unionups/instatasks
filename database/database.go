@@ -6,6 +6,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"instatasks/config"
+
 	"os"
 	"time"
 )
@@ -61,7 +62,6 @@ func InitDB() *gorm.DB {
 	}
 
 	DB = db
-	migrate()
 
 	return DB
 }

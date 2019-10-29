@@ -14,10 +14,6 @@ import (
 
 type UserAgent = models.UserAgent
 
-type UserAgentData struct {
-	Data UserAgent
-}
-
 func GetUseragent() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -49,24 +45,21 @@ func CreateUseragent() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// c.MustGet(gin.AuthUserKey)
 
-		var json UserAgentData
+		var userAgent UserAgent
 		var rsaKey models.RsaKey
 
 		db := database.GetDB()
 
-		if err = c.ShouldBindJSON(&json); err != nil {
+		if err := c.ShouldBindJSON(&userAgent); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		userAgent := json.Data
-
-		if err := db.Create(&userAgent).Error; err != nil {
+		if err := userAgent.Create(); err != nil {
 			c.AbortWithStatusJSON(500, gin.H{"error": err})
 			log.Println("Error: Can't create User-Agent")
 			return
 		}
-		db.Save(&userAgent)
 
 		if err := db.Model(&userAgent).Related(&rsaKey, "RsaKey").Error; err != nil {
 			c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -95,7 +88,7 @@ func GetRsaPublicKey() gin.HandlerFunc {
 
 		db := database.GetDB()
 
-		if err = c.ShouldBindJSON(&rsaKey); err != nil {
+		if err := c.ShouldBindJSON(&rsaKey); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

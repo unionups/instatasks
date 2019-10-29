@@ -8,10 +8,10 @@ import (
 )
 
 type UserAgent struct {
-	Name      string `header:"User-Agent" json:"name" binding:"required"  gorm:"primary_key"`
+	Name      string `header:"User-Agent" json:"name" binding:"required"  gorm:"primary_key:true"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
+	DeletedAt *time.Time
 
 	Activitylimit uint `json:"activitylimit" gorm:"default:0"`
 	Like          bool `json:"like" gorm:"default:true"`
@@ -48,26 +48,8 @@ func InitUserAgentCache() {
 
 	DB.Set("gorm:auto_preload", true).Find(&userAgents)
 
-	mx.Lock()
-	defer mx.Unlock()
-
 	for _, userAgent := range userAgents {
-		cachedUserAgentSettings[userAgent.Name] = &CachedUserAgentSettings{
-			Activitylimit: userAgent.Activitylimit,
-			Like:          userAgent.Like,
-			Follow:        userAgent.Follow,
-			Pricefollow:   userAgent.Pricefollow,
-			Pricelike:     userAgent.Pricelike,
-		}
-
-		cachedPrice[userAgent.Name] = &CachedPrice{
-			Pricefollow: userAgent.Pricefollow,
-			Pricelike:   userAgent.Pricelike,
-		}
-
-		rsa_private_key_bytes := AesDecrypt(userAgent.RsaKey.RsaPrivateKeyAesEncripted, ServerConfig.AesPassphrase)
-
-		cachedRSAPrivateKey[userAgent.Name] = BytesToPrivateKey(rsa_private_key_bytes)
+		userAgent.CacheUserAgent()
 	}
 }
 
@@ -89,6 +71,22 @@ func (ua *UserAgent) BeforeCreate() (err error) {
 	return
 }
 
+func (userAgent *UserAgent) Create() (err error) {
+	if err = DB.Create(userAgent).Error; err != nil {
+		return
+	}
+	DB.Save(userAgent)
+	userAgent.CacheUserAgent()
+	return
+}
+
+func (userAgent *UserAgent) Save() (err error) {
+	DB.Save(userAgent)
+	userAgent.CacheSettings()
+	userAgent.CachePrice()
+	return
+}
+
 func (userAgent *UserAgent) FindSettings() (err error) {
 
 	if cUAS, ok := cachedUserAgentSettings[userAgent.Name]; !ok {
@@ -96,7 +94,7 @@ func (userAgent *UserAgent) FindSettings() (err error) {
 			err = ErrStatusForbidden
 			return
 		} else {
-			userAgent.Save()
+			userAgent.CacheSettings()
 			return
 		}
 	} else {
@@ -105,8 +103,48 @@ func (userAgent *UserAgent) FindSettings() (err error) {
 	return
 }
 
-func (userAgent *UserAgent) Save() (err error) {
-	DB.Save(userAgent)
-	InitUserAgentCache()
+func (userAgent *UserAgent) FindPrice() (err error) {
+	if cP, ok := cachedPrice[userAgent.Name]; !ok {
+		if DB.First(userAgent).RecordNotFound() {
+			err = ErrStatusForbidden
+			return
+		} else {
+			userAgent.CachePrice()
+			return
+		}
+	} else {
+		copier.Copy(userAgent, cP)
+	}
+	return
+}
+
+func (userAgent *UserAgent) CacheSettings() (err error) {
+	mx.Lock()
+	defer mx.Unlock()
+	cachedUserAgentSettings[userAgent.Name] = &CachedUserAgentSettings{
+		Activitylimit: userAgent.Activitylimit,
+		Like:          userAgent.Like,
+		Follow:        userAgent.Follow,
+		Pricefollow:   userAgent.Pricefollow,
+		Pricelike:     userAgent.Pricelike,
+	}
+	return
+}
+
+func (userAgent *UserAgent) CachePrice() (err error) {
+	mx.Lock()
+	defer mx.Unlock()
+	cachedPrice[userAgent.Name] = &CachedPrice{
+		Pricefollow: userAgent.Pricefollow,
+		Pricelike:   userAgent.Pricelike,
+	}
+	return
+}
+
+func (userAgent *UserAgent) CacheUserAgent() (err error) {
+	userAgent.CacheSettings()
+	userAgent.CachePrice()
+	rsa_private_key_bytes := AesDecrypt(userAgent.RsaKey.RsaPrivateKeyAesEncripted, ServerConfig.AesPassphrase)
+	cachedRSAPrivateKey[userAgent.Name] = BytesToPrivateKey(rsa_private_key_bytes)
 	return
 }

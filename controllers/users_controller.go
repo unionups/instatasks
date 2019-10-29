@@ -9,23 +9,17 @@ import (
 	"log"
 )
 
-var err error
-
-type UserData struct {
-	Data models.User
-}
+type User = models.User
 
 func GetOrCreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var json UserData
+		var user User
 
-		if err = c.ShouldBindJSON(&json); err != nil {
+		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			panic(err)
 			return
 		}
-
-		user := &json.Data
 
 		if user.Deviceid == "" {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Request must have Devise ID"})
@@ -33,7 +27,7 @@ func GetOrCreateUser() gin.HandlerFunc {
 			return
 		}
 
-		if err = user.FirstNotBannedOrCreate(); err != nil {
+		if err := user.FirstNotBannedOrCreate(); err != nil {
 			if IsStatusForbiddenError(err) {
 				c.AbortWithStatusJSON(http.StatusForbidden, nil)
 				log.Println("Error: Banned")

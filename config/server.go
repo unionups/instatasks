@@ -3,6 +3,8 @@ package config
 type Cache struct {
 	NewUserExpiration int `mapstructure:"new_user_expiration"`
 	UserExpiration    int `mapstructure:"user_expiration"`
+	NewTaskExpiration int `mapstructure:"new_task_expiration"`
+	TaskExpiration    int `mapstructure:"task_expiration"`
 }
 
 type Superadmin struct {

@@ -1,19 +1,19 @@
-package database
+package migrations
 
 import (
-	"log"
-
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-
 	"gopkg.in/gormigrate.v1"
+	"instatasks/database"
+	"instatasks/models"
 
+	"log"
 	"time"
 )
 
-func migrate() {
-	db := DB
+func Migrate() {
+	db := database.GetDB()
 	m := gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		// create users table
 		{
@@ -22,14 +22,18 @@ func migrate() {
 				// it's a good pratice to copy the struct inside the function,
 				// so side effects are prevented if the original struct changes during the time
 				type User struct {
-					Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key" `
+					Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key:true"`
 					CreatedAt   time.Time
 					UpdatedAt   time.Time
 					DeletedAt   *time.Time `sql:"index"`
 					Banned      bool       `gorm:"default:false"`
-					Coins       int        `json:"coins" gorm:"default:0"`
+					Coins       uint       `json:"coins" gorm:"default:0"`
 					Deviceid    string     `json:"deviceid" gorm:"-"`
-					Rateus      bool       `json:"rateus" gorm:"default:true"`
+					Rateus      bool       `binding:"-" gorm:"default:true"`
+
+					Tasks []models.Task `gorm:"foreignkey:Instagramid;association_foreignkey:Instagramid"`
+
+					DoneTasks []*models.Task `gorm:"many2many:user_task"`
 				}
 				return tx.AutoMigrate(&User{}).Error
 			},
@@ -42,7 +46,7 @@ func migrate() {
 			ID: "101608301701",
 			Migrate: func(tx *gorm.DB) error {
 				type BannedDevice struct {
-					Deviceid  string `gorm:"primary_key"`
+					Deviceid  string `gorm:"primary_key:true"`
 					CreatedAt time.Time
 				}
 				return tx.AutoMigrate(&BannedDevice{}).Error
@@ -55,17 +59,11 @@ func migrate() {
 		{
 			ID: "101608301802",
 			Migrate: func(tx *gorm.DB) error {
-				type RsaKey struct {
-					Name string `header:"User-Agent" json:"name" binding:"required" gorm:"primary_key"`
-
-					RsaPrivateKeyAesEncripted []byte `gorm:"not null"`
-					RsaPublicKeyAesEncripted  []byte `gorm:"not null"`
-				}
 				type UserAgent struct {
-					Name      string `header:"User-Agent" json:"name" binding:"required"  gorm:"primary_key"`
+					Name      string `header:"User-Agent" json:"name" binding:"required"  gorm:"primary_key:true"`
 					CreatedAt time.Time
 					UpdatedAt time.Time
-					DeletedAt *time.Time `sql:"index"`
+					DeletedAt *time.Time
 
 					Activitylimit uint `json:"activitylimit" gorm:"default:0"`
 					Like          bool `json:"like" gorm:"default:true"`
@@ -73,7 +71,7 @@ func migrate() {
 					Pricefollow   uint `json:"pricefollow" gorm:"default:5"`
 					Pricelike     uint `json:"pricelike" gorm:"default:1"`
 
-					RsaKey RsaKey `gorm:"foreignkey:Name;association_foreignkey:Name"`
+					RsaKey models.RsaKey `gorm:"foreignkey:Name;association_foreignkey:Name"`
 				}
 				return tx.AutoMigrate(&UserAgent{}).Error
 			},
@@ -86,7 +84,7 @@ func migrate() {
 			ID: "101608301901",
 			Migrate: func(tx *gorm.DB) error {
 				type RsaKey struct {
-					Name string `header:"User-Agent"  gorm:"primary_key"`
+					Name string `header:"User-Agent" json:"name" gorm:"primary_key:true"`
 
 					RsaPrivateKeyAesEncripted []byte `gorm:"not null"`
 					RsaPublicKeyAesEncripted  []byte `gorm:"not null"`
@@ -95,6 +93,32 @@ func migrate() {
 			},
 			Rollback: func(tx *gorm.DB) error {
 				return tx.DropTable("rsa_keys").Error
+			},
+		},
+		// create tasks table
+		{
+			ID: "101608302001",
+			Migrate: func(tx *gorm.DB) error {
+				type Task struct {
+					ID        uint `gorm:"primary_key"`
+					CreatedAt time.Time
+					DeletedAt *time.Time `sql:"index"`
+					// Taskid            string     `json:"taskid" binding:"-"`
+					Type              string `json:"type" binding:"required"`
+					Count             uint   `json:"count" binding:"required" gorm:"not null"`
+					LeftCounter       uint
+					Photourl          string `json:"photourl"`
+					Instagramusername string `json:"instagramusername"`
+					Mediaid           string `json:"mediaid"`
+
+					Instagramid uint64 `json:"instagramid" binding:"required" sql:"index" gorm:"not null"`
+
+					DoneUsers []*models.User `gorm:"many2many:user_task"`
+				}
+				return tx.AutoMigrate(&Task{}).Error
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return tx.DropTable("tasks").Error
 			},
 		},
 	})

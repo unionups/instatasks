@@ -2,7 +2,8 @@ package main_test
 
 import (
 	"bytes"
-	// "encoding/json"
+	"encoding/json"
+	// "fmt"
 	. "github.com/benjamintf1/unmarshalledmatchers"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -10,6 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 	"instatasks/config"
 	"instatasks/database"
+	"instatasks/database/migrations"
 	"instatasks/models"
 	"instatasks/redis_storage"
 	"instatasks/router"
@@ -17,8 +19,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	// "strconv"
-	// "fmt"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -39,13 +41,13 @@ var _ = BeforeSuite(func() {
 	config.InitConfig()
 	r = router.SetupRouter()
 	db = database.InitDB()
-	autocleaner = DatabaseAutocleaner(db)
-	// redis_storage.InitCache()
+	// autocleaner = DatabaseAutocleaner(db)
+	migrations.Migrate()
 	models.Init()
 })
 
 var _ = AfterSuite(func() {
-	autocleaner()
+	// autocleaner()
 	db.Close()
 })
 
@@ -77,16 +79,14 @@ var _ = Describe("Instatasks API", func() {
 	})
 	/////////////////////////////////////////////////////////////
 	Describe("Accaunt (POST /accaunt) route", func() {
-		reqBody := []byte(`{ "data": {
+		reqBody := []byte(`{
 			"instagramid": 666,
 			"deviceid":    "device1"
-		}
 		}`)
 
 		Context("None banned User", func() {
-			wrongReqBody := []byte(`{ "data": {
+			wrongReqBody := []byte(`{
 				"instagramid": 666
-			}
 			}`)
 
 			expected_response := []byte(`{
@@ -154,10 +154,9 @@ var _ = Describe("Instatasks API", func() {
 				bannedDevice := models.BannedDevice{Deviceid: "device2"}
 				db.Save(&bannedDevice)
 
-				bannedDeviceReqBody := []byte(`{ "data": {
+				bannedDeviceReqBody := []byte(`{
 					"instagramid": 667,
 					"deviceid":    "device2"
-				}
 				}`)
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(bannedDeviceReqBody))
@@ -171,6 +170,7 @@ var _ = Describe("Instatasks API", func() {
 
 	/////////////////////////////////////////////////////////////
 	Describe("User Agent settings (POST /setting) route", func() {
+
 		It("must return User Agent settings", func() {
 			userAgent := &models.UserAgent{Name: "user_agent_with_default_settings"}
 			userAgent.Save()
@@ -183,7 +183,100 @@ var _ = Describe("Instatasks API", func() {
 			Ω(w.Code).Should(Equal(http.StatusOK))
 			Ω(w.Body).Should(ContainUnorderedJSON(`{"activitylimit": 0, "like": true }`))
 		})
+	})
 
+	/////////////////////////////////////////////////////////////
+	Describe("Create Task (POST /newwork) route", func() {
+
+		It("User must create new Task if User have enough Coins", func() {
+			reqBody := []byte(`{ 
+				"instagramid": 777,
+				"count": 10,
+				"type": "like",
+				"mediaid":"mediaid1",
+				"photourl":"url/blabla", 
+				"instagramusername":"url/blabla" 
+			}`)
+			user := models.User{Instagramid: 777, Coins: 20}
+			user.Save()
+
+			req, _ := http.NewRequest("POST", "/newwork", bytes.NewBuffer(reqBody))
+			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`) // like default price 1
+			r.ServeHTTP(w, req)
+
+			Ω(db.First(&models.Task{Instagramid: 777}).RecordNotFound()).Should(BeFalse())
+			Ω(w.Code).Should(Equal(http.StatusOK))
+			Ω(w.Body).Should(MatchUnorderedJSON(`{"coins": 10}`))
+		})
+
+		It("User must get error code 406 NotAcceptable if User does not have enough coins", func() {
+			reqBody := []byte(`{
+				"instagramid": 888,
+				"count": 20,
+				"type": "like",
+				"mediaid":"mediaid1",
+				"photourl":"url/blabla", 
+				"instagramusername":"url/blabla" 
+			}`)
+			user := models.User{Instagramid: 888, Coins: 10}
+			user.Save()
+
+			req, _ := http.NewRequest("POST", "/newwork", bytes.NewBuffer(reqBody))
+			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`) // like default price 1
+			r.ServeHTTP(w, req)
+
+			Ω(db.Where(&models.Task{Instagramid: 888}).First(&models.Task{}).RecordNotFound()).Should(BeTrue())
+			Ω(w.Code).Should(Equal(http.StatusNotAcceptable))
+			Ω(w.Body).Should(MatchUnorderedJSON(`{"error": "Not Enough Coins"}`))
+		})
+	})
+
+	/////////////////////////////////////////////////////////////
+	Describe("Get Tasks history (POST /history) route", func() {
+
+		It("must return last 10 User tasks (soft deleted too)", func() {
+			task := models.Task{
+				Instagramid:       777,
+				Type:              "follow",
+				Count:             20,
+				Photourl:          "url/blabla",
+				Instagramusername: "url/blabla",
+				Mediaid:           "mediaid2",
+			}
+
+			for i := 0; i < 4; i++ {
+				temp := task
+				db.Create(&temp)
+			}
+			for i := 0; i < 4; i++ {
+				temp := task
+				db.Create(&temp)
+				db.Delete(&temp)
+			}
+			for i := 0; i < 4; i++ {
+				temp := task
+				db.Create(&temp)
+			}
+
+			req, _ := http.NewRequest("POST", "/history", strings.NewReader(`{"instagramid": 777}`))
+			req.Header.Add("Content-Type", `application/json`)
+			r.ServeHTTP(w, req)
+
+			resp := []struct {
+				Taskid string `json:"taskid"`
+			}{}
+			json.Unmarshal([]byte(w.Body.String()), &resp)
+
+			Ω(len(resp)).Should(Equal(10))
+			first_id, _ := strconv.Atoi(resp[0].Taskid)
+			last_id, _ := strconv.Atoi(resp[len(resp)-1].Taskid)
+
+			Ω(first_id > last_id).Should(BeTrue())
+			Ω(w.Code).Should(Equal(http.StatusOK))
+
+		})
 	})
 })
 
@@ -217,10 +310,9 @@ var _ = Describe("Instatasks Admin API. Admin (/admin) protected route group", f
 			It("must generate rsa keys, AES encript rsa keys, create UserAgent (with default value) in DB", func() {
 				validSuperadminUsername := config.GetConfig().Server.Superadmin.Username
 				validSuperadminPassword := config.GetConfig().Server.Superadmin.Password
-				reqBody := []byte(`{ "data": {
+				reqBody := []byte(`{
 					"name": "useragent1",
 					"activitylimit": 1
-				}
 				}`)
 
 				req, _ := http.NewRequest("POST", "/admin/useragent", bytes.NewBuffer(reqBody))

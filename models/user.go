@@ -1,28 +1,32 @@
 package models
 
 import (
-	. "instatasks/helpers"
-	// "github.com/jinzhu/gorm"
 	"github.com/jinzhu/copier"
+	// "github.com/jinzhu/gorm"
+	. "instatasks/helpers"
 	"instatasks/redis_storage"
 	"strconv"
 	"time"
 )
 
 type User struct {
-	Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key" `
+	Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key:true"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time `sql:"index"`
 	Banned      bool       `gorm:"default:false"`
-	Coins       int        `json:"coins" gorm:"default:0"`
+	Coins       uint       `json:"coins" gorm:"default:0"`
 	Deviceid    string     `json:"deviceid" gorm:"-"`
 	Rateus      bool       `binding:"-" gorm:"default:true"`
+
+	Tasks []Task `gorm:"foreignkey:Instagramid;association_foreignkey:Instagramid"`
+
+	DoneTasks []*Task `gorm:"many2many:user_task"`
 }
 
 type CachedUser struct {
 	Banned bool
-	Coins  int
+	Coins  uint
 	Rateus bool
 }
 
@@ -67,23 +71,79 @@ func (user *User) FirstOrCreate() (err error) {
 	}); err != nil {
 		return
 	}
-	copier.Copy(&user, &cachedUser)
+	copier.Copy(user, &cachedUser)
+	return
+}
+
+func (user *User) First() (err error) {
+	var cachedUser CachedUser
+
+	if err = UserRedisCacheCodec.Once(&redis_storage.CacheItem{
+		Key:        user.getIdString(),
+		Object:     &cachedUser,
+		Expiration: DurationInHours(ServerConfig.Cache.UserExpiration),
+		Func: func() (interface{}, error) {
+			if err = DB.First(user).Error; err != nil {
+				return nil, err
+			}
+			copier.Copy(&cachedUser, user)
+			return cachedUser, nil
+		},
+	}); err != nil {
+		return
+	}
+	copier.Copy(user, &cachedUser)
 	return
 }
 
 func (user *User) Save() (err error) {
-
 	if err = DB.Save(user).Error; err != nil {
 		return
 	}
+	err = user.SetCache(ServerConfig.Cache.UserExpiration)
+	return
+}
 
+func (user *User) UpdateColumns(p map[string]interface{}) (err error) {
+	if err = DB.Model(user).UpdateColumns(p).Error; err != nil {
+		return
+	}
+	err = user.SetCache(ServerConfig.Cache.UserExpiration)
+	return
+}
+
+func (user *User) Updates(p map[string]interface{}) (err error) {
+	if err = DB.Model(user).Updates(p).Error; err != nil {
+		return
+	}
+	err = user.SetCache(ServerConfig.Cache.UserExpiration)
+	return
+}
+
+func (user *User) UpdateColumn(values ...interface{}) (err error) {
+	if err = DB.Model(user).UpdateColumn(values).Error; err != nil {
+		return
+	}
+	err = user.SetCache(ServerConfig.Cache.UserExpiration)
+	return
+}
+
+func (user *User) Update(attrs ...interface{}) (err error) {
+	if err = DB.Model(user).Update(attrs).Error; err != nil {
+		return
+	}
+	err = user.SetCache(ServerConfig.Cache.UserExpiration)
+	return
+}
+
+func (user *User) SetCache(expiration int) (err error) {
 	cachedUser := CachedUser{}
 	copier.Copy(&cachedUser, user)
 
-	UserRedisCacheCodec.Set(&redis_storage.CacheItem{
+	err = UserRedisCacheCodec.Set(&redis_storage.CacheItem{
 		Key:        user.getIdString(),
 		Object:     &cachedUser,
-		Expiration: DurationInHours(ServerConfig.Cache.UserExpiration),
+		Expiration: DurationInHours(expiration),
 	})
 
 	return

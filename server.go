@@ -7,6 +7,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"instatasks/config"
 	"instatasks/database"
+	"instatasks/database/migrations"
 	// "instatasks/redis_storage"
 	"instatasks/models"
 	"instatasks/router"
@@ -27,6 +28,8 @@ func main() {
 	db = database.InitDB()
 	db.DB().Ping()
 	defer db.Close()
+
+	migrations.Migrate()
 
 	models.Init()
 

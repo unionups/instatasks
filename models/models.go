@@ -14,4 +14,6 @@ func Init() {
 	DB = database.GetDB()
 	InitUserCache()
 	InitUserAgentCache()
+	InitTaskCache()
+	InitUserTaskCache()
 }

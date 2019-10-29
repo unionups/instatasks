@@ -10,15 +10,27 @@ database:
 
 redis:
   addr: redis:6379
-  # connection pool
-  min_idle_conns: 50
-  max_conn_age:   1
-  pool_size: 100
+
+  ### CONNECTION POOL OPTIONS
+
+  ## Minimum number of idle connections which is useful when establishing
+  ## new connection is slow.
+  min_idle_conns: 5
+
+  ## Connection age at which client retires (closes) the connection.
+  ## Default is to not close aged connection
+  # max_conn_age:   1
+
+  ## Maximum number of socket connections.
+  ## Default is 10 connections per every CPU as reported by runtime.NumCPU.
+  # pool_size: 100
 
 server:
   rsa_key_size: 2048 #bytes
   cache:
     #expiration hours
-    new_user_expiration: 12 
+    new_user_expiration: 24 
     user_expiration: 2
+    new_task_expiration: 24
+    task_expiration: 2
   
