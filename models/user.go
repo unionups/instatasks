@@ -48,6 +48,7 @@ func (user *User) FirstNotBannedOrCreate() (err error) {
 	}
 
 	if !DB.First(&BannedDevice{Deviceid: user.Deviceid}).RecordNotFound() {
+		user.UpdateColumn("banned", true)
 		err = ErrStatusForbidden
 		return
 	}
