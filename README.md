@@ -12,7 +12,8 @@ For route access used BasicAuthorization strategy
 |--|--|
 |Content-Type|"application/json"|
 |Authorization|"Basic " + Base64 encoded "username:password"|
-username and password is set by environment variables:
+
+username and password on server stored in environment variables:
 ```go
 SUPERADMIN_USERNAME=superadmin
 SUPERADMIN_PASSWORD=superadminsupersecretpassword
