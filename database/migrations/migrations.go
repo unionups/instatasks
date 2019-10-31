@@ -68,6 +68,7 @@ func Migrate() {
 					Follow        bool `json:"follow" gorm:"default:true"`
 					Pricefollow   uint `json:"pricefollow" gorm:"default:5"`
 					Pricelike     uint `json:"pricelike" gorm:"default:1"`
+					Pricerateus   uint `json:"pricerateus" gorm:"default:20"`
 
 					RsaKey models.RsaKey `gorm:"foreignkey:Name;association_foreignkey:Name"`
 				}

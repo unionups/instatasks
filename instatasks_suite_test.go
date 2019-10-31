@@ -375,6 +375,32 @@ var _ = Describe("Instatasks API", func() {
 			Ω(w.Body).Should(ContainUnorderedJSON(`{"coins": 15}`))
 		})
 	})
+
+	/////////////////////////////////////////////////////////////
+	Describe("Rateus (POST /rateus) route", func() {
+
+		It("must return ballance if task is not already done", func() {
+
+			req, _ := http.NewRequest("POST", "/rateus", strings.NewReader(`{"instagramid": 888}`))
+			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
+			r.ServeHTTP(w, req)
+
+			Ω(w.Code).Should(Equal(http.StatusOK))
+			/// default price 20, previous balance 15, must return 35
+			Ω(w.Body).Should(ContainUnorderedJSON(`{"coins": 35}`))
+		})
+
+		It("must return NotAcceptable (406) if task already done", func() {
+
+			req, _ := http.NewRequest("POST", "/rateus", strings.NewReader(`{"instagramid": 888}`))
+			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
+			r.ServeHTTP(w, req)
+
+			Ω(w.Code).Should(Equal(http.StatusNotAcceptable))
+		})
+	})
 })
 
 /////////////////////////////////////////////////////////////

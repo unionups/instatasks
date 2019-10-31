@@ -21,7 +21,7 @@ func CreateTask() gin.HandlerFunc {
 
 		if err := c.ShouldBindJSON(&task); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			panic(err)
+			log.Println("Error: ", err.Error())
 			return
 		}
 
