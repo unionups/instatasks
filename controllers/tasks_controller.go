@@ -11,7 +11,7 @@ import (
 
 type Task = models.Task
 
-var once sync.Once
+var wg sync.WaitGroup
 
 func CreateTask() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -191,7 +191,7 @@ func DoneTask() gin.HandlerFunc {
 				return
 			}
 			c.AbortWithStatusJSON(http.StatusResetContent, gin.H{"error": "Task Canceled"}) // 205
-			go models.DB.Create(&models.UserMediaid{Instagramid: json.Instagramid, Mediaid: task.Mediaid})
+			models.DB.Create(&models.UserMediaid{Instagramid: json.Instagramid, Mediaid: task.Mediaid})
 			return
 		}
 
@@ -229,10 +229,15 @@ func DoneTask() gin.HandlerFunc {
 		}
 
 		c.JSON(200, gin.H{"coins": user.Coins})
-
-		go func(u User) {
+		wg.Add(2)
+		go func() {
 			models.DB.Create(&models.UserMediaid{Instagramid: json.Instagramid, Mediaid: task.Mediaid})
+			wg.Done()
+		}()
+		go func() {
 			user.UpdateColumn("coins", user.Coins)
-		}(user)
+			wg.Done()
+		}()
+		wg.Wait()
 	}
 }

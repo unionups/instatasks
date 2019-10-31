@@ -5,8 +5,8 @@ import (
 	"github.com/jinzhu/gorm"
 	. "instatasks/helpers"
 	"instatasks/redis_storage"
-
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -35,6 +35,7 @@ type CachedTask struct {
 
 var (
 	TaskRedisCacheCodec *redis_storage.CacheCodec
+	wg                  sync.WaitGroup
 )
 
 func (t *Task) BeforeCreate() (err error) {
@@ -81,15 +82,22 @@ func (t *Task) DecrementLeftCounter() (err error) {
 	if err = TaskRedisCacheCodec.Get(t.getIdString(), &cachedTask); err == nil {
 
 		cachedTask.LeftCounter--
-		copier.Copy(t, &cachedTask)
 
-		go DB.Model(t).Update("left_counter", t.LeftCounter)
-
-		err = TaskRedisCacheCodec.Set(&redis_storage.CacheItem{
-			Key:        t.getIdString(),
-			Object:     &cachedTask,
-			Expiration: DurationInHours(ServerConfig.Cache.NewTaskExpiration),
-		})
+		wg.Add(2)
+		go func() {
+			DB.Model(t).Update("left_counter", t.LeftCounter)
+			wg.Done()
+		}()
+		go func() {
+			copier.Copy(t, &cachedTask)
+			err = TaskRedisCacheCodec.Set(&redis_storage.CacheItem{
+				Key:        t.getIdString(),
+				Object:     &cachedTask,
+				Expiration: DurationInHours(ServerConfig.Cache.TaskExpiration),
+			})
+			wg.Done()
+		}()
+		wg.Wait()
 		return
 	}
 
@@ -116,13 +124,21 @@ func (t *Task) DecrementCancelLeftCounter() (err error) {
 		cachedTask.CancelLeftCounter--
 		copier.Copy(t, &cachedTask)
 
-		go DB.Model(t).Update("cancel_left_counter", t.CancelLeftCounter)
-
-		err = TaskRedisCacheCodec.Set(&redis_storage.CacheItem{
-			Key:        t.getIdString(),
-			Object:     &cachedTask,
-			Expiration: DurationInHours(ServerConfig.Cache.TaskExpiration),
-		})
+		wg.Add(2)
+		go func() {
+			DB.Model(t).Update("cancel_left_counter", t.LeftCounter)
+			wg.Done()
+		}()
+		go func() {
+			copier.Copy(t, &cachedTask)
+			err = TaskRedisCacheCodec.Set(&redis_storage.CacheItem{
+				Key:        t.getIdString(),
+				Object:     &cachedTask,
+				Expiration: DurationInHours(ServerConfig.Cache.TaskExpiration),
+			})
+			wg.Done()
+		}()
+		wg.Wait()
 		return
 	}
 
