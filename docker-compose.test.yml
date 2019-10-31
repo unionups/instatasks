@@ -2,11 +2,15 @@ version: '3.2'
 
 services:
 
+
   redis: 
     container_name: redis_instatasksdb
     image: redis:alpine
     hostname: redis
     restart: always
+    tty: true
+    environment: 
+      - TERM=xterm-256color
     env_file: 
       - .env
     networks:
@@ -30,8 +34,10 @@ services:
       dockerfile: Dockerfile.test
     env_file: 
       - .env
+    tty: true
     environment:
       - APP_ENV=test
+      - TERM=xterm-256color
     volumes:
       - .:/go/src/instatasks
     networks:

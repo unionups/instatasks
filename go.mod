@@ -14,7 +14,7 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20191001013358-cfbb681360f0 // indirect
-	github.com/fatih/color v1.7.0 // indirect
+	github.com/fatih/color v1.7.0
 	github.com/gin-gonic/gin v1.4.1-0.20191017021444-0ce46610292c
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-redis/cache/v7 v7.0.2
@@ -62,7 +62,7 @@ require (
 	golang.org/x/mobile v0.0.0-20191002175909-6d0d39b2ca82 // indirect
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20191024172528-b4ff53e7a1cb // indirect
+	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
 	golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0 // indirect
 	golang.org/x/tools v0.0.0-20191024220359-3d91e92cde03 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect

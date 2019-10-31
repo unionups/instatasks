@@ -37,6 +37,7 @@ func GetUseragent() gin.HandlerFunc {
 			"follow":        userAgent.Follow,
 			"pricefollow":   userAgent.Pricefollow,
 			"pricelike":     userAgent.Pricelike,
+			"pricerateus":   userAgent.Pricerateus,
 		})
 	}
 }
@@ -76,6 +77,7 @@ func CreateUseragent() gin.HandlerFunc {
 			"follow":         userAgent.Follow,
 			"pricefollow":    userAgent.Pricefollow,
 			"pricelike":      userAgent.Pricelike,
+			"pricerateus":    userAgent.Pricerateus,
 			"rsa_public_key": rsa_public_key,
 		})
 	}

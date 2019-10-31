@@ -3,7 +3,6 @@ package main_test
 import (
 	"bytes"
 	"encoding/json"
-	// "fmt"
 	. "github.com/benjamintf1/unmarshalledmatchers"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -103,6 +102,8 @@ var _ = Describe("Instatasks API", func() {
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)
 				r.ServeHTTP(w, req)
+				///*******
+				LogHttpData(req, w)
 
 				Ω(db.First(&models.User{Instagramid: 666}).RecordNotFound()).Should(BeFalse())
 				cache := redis_storage.GetCacheCodec("User")
@@ -146,6 +147,8 @@ var _ = Describe("Instatasks API", func() {
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)
 				r.ServeHTTP(w, req)
+				///*******
+				LogHttpData(req, w)
 
 				Ω(w.Code).Should(Equal(http.StatusForbidden))
 			})
@@ -162,6 +165,8 @@ var _ = Describe("Instatasks API", func() {
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(bannedDeviceReqBody))
 				req.Header.Add("Content-Type", `application/json`)
 				r.ServeHTTP(w, req)
+				///*******
+				LogHttpData(req, w)
 
 				Ω(w.Code).Should(Equal(http.StatusForbidden))
 			})
@@ -179,6 +184,8 @@ var _ = Describe("Instatasks API", func() {
 			req.Header.Add("Content-Type", `application/json`)
 			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			Ω(w.Code).Should(Equal(http.StatusOK))
 			Ω(w.Body).Should(ContainUnorderedJSON(`{"activitylimit": 0, "like": true }`))
@@ -204,6 +211,8 @@ var _ = Describe("Instatasks API", func() {
 			req.Header.Add("Content-Type", `application/json`)
 			req.Header.Add("User-Agent", `user_agent_with_default_settings`) // like default price 1
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			Ω(db.First(&models.Task{Instagramid: 777}).RecordNotFound()).Should(BeFalse())
 			Ω(w.Code).Should(Equal(http.StatusOK))
@@ -226,6 +235,8 @@ var _ = Describe("Instatasks API", func() {
 			req.Header.Add("Content-Type", `application/json`)
 			req.Header.Add("User-Agent", `user_agent_with_default_settings`) // like default price 1
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			Ω(db.Where(&models.Task{Instagramid: 888}).First(&models.Task{}).RecordNotFound()).Should(BeTrue())
 			Ω(w.Code).Should(Equal(http.StatusNotAcceptable))
@@ -263,6 +274,8 @@ var _ = Describe("Instatasks API", func() {
 			req, _ := http.NewRequest("POST", "/history", strings.NewReader(`{"instagramid": 777}`))
 			req.Header.Add("Content-Type", `application/json`)
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			resp := []struct {
 				Taskid string `json:"taskid"`
@@ -324,6 +337,8 @@ var _ = Describe("Instatasks API", func() {
 				req, _ := http.NewRequest("POST", "/gettasks", strings.NewReader(`{"instagramid": 777, "type":"like"}`))
 				req.Header.Add("Content-Type", `application/json`)
 				r.ServeHTTP(w, req)
+				///*******
+				LogHttpData(req, w)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
 				Ω(w.Body).Should(ContainUnorderedJSON(`[{"type": "like"}]`))
@@ -334,6 +349,8 @@ var _ = Describe("Instatasks API", func() {
 				req, _ := http.NewRequest("POST", "/gettasks", strings.NewReader(`{"instagramid": 888, "type":"all"}`))
 				req.Header.Add("Content-Type", `application/json`)
 				r.ServeHTTP(w, req)
+				///*******
+				LogHttpData(req, w)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
 				Ω(w.Body).ShouldNot(ContainUnorderedJSON(`[{"mediaid": "mediaid1"}]`))
@@ -354,6 +371,8 @@ var _ = Describe("Instatasks API", func() {
 			req, _ := http.NewRequest("POST", "/done", strings.NewReader(cancel_req))
 			req.Header.Add("Content-Type", `application/json`)
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			Ω(w.Code).Should(Equal(http.StatusResetContent))
 		})
@@ -369,6 +388,8 @@ var _ = Describe("Instatasks API", func() {
 			req.Header.Add("Content-Type", `application/json`)
 			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			Ω(w.Code).Should(Equal(http.StatusOK))
 			/// task 19 is follow, price 5, must return 15
@@ -385,6 +406,8 @@ var _ = Describe("Instatasks API", func() {
 			req.Header.Add("Content-Type", `application/json`)
 			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			Ω(w.Code).Should(Equal(http.StatusOK))
 			/// default price 20, previous balance 15, must return 35
@@ -397,6 +420,8 @@ var _ = Describe("Instatasks API", func() {
 			req.Header.Add("Content-Type", `application/json`)
 			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 			r.ServeHTTP(w, req)
+			///*******
+			LogHttpData(req, w)
 
 			Ω(w.Code).Should(Equal(http.StatusNotAcceptable))
 		})
@@ -442,6 +467,8 @@ var _ = Describe("Instatasks Admin API. Admin (/admin) protected route group", f
 				req.Header.Add("Content-Type", `application/json`)
 				req.Header.Add("Authorization", AuthorizationHeader(validSuperadminUsername, validSuperadminPassword))
 				r.ServeHTTP(w, req)
+				///*******
+				LogHttpData(req, w)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
 				Ω(w.Body).Should(ContainUnorderedJSON(`{"name": "useragent1", "activitylimit": 1, "like": true }`))
@@ -456,6 +483,8 @@ var _ = Describe("Instatasks Admin API. Admin (/admin) protected route group", f
 				req.Header.Add("Content-Type", `application/json`)
 				req.Header.Add("Authorization", AuthorizationHeader(validSuperadminUsername, validSuperadminPassword))
 				r.ServeHTTP(w, req)
+				///*******
+				LogHttpData(req, w)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
 				Ω(w.Body.String()).Should(ContainSubstring("BEGIN RSA PUBLIC KEY"))

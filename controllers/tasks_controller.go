@@ -6,9 +6,12 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 type Task = models.Task
+
+var once sync.Once
 
 func CreateTask() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -211,7 +214,7 @@ func DoneTask() gin.HandlerFunc {
 			return
 		}
 
-		user := &User{Instagramid: json.Instagramid}
+		user := User{Instagramid: json.Instagramid}
 		if err := user.First(); err != nil {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "User Not Found"})
 			log.Println("Error: User Not Found")
@@ -227,9 +230,9 @@ func DoneTask() gin.HandlerFunc {
 
 		c.JSON(200, gin.H{"coins": user.Coins})
 
-		go func() {
+		go func(u User) {
 			user.UpdateColumn("coins", user.Coins)
 			models.DB.Create(&models.UserMediaid{Instagramid: json.Instagramid, Mediaid: task.Mediaid})
-		}()
+		}(user)
 	}
 }
