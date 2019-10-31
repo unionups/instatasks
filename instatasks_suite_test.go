@@ -239,7 +239,7 @@ var _ = Describe("Instatasks API", func() {
 		It("must return last 10 User tasks (soft deleted too)", func() {
 			task := models.Task{
 				Instagramid:       777,
-				Type:              "follow",
+				Type:              "like",
 				Count:             20,
 				Photourl:          "url/blabla",
 				Instagramusername: "url/blabla",
@@ -255,7 +255,7 @@ var _ = Describe("Instatasks API", func() {
 				db.Create(&temp)
 				db.Delete(&temp)
 			}
-			for i := 0; i < 4; i++ {
+			for i := 0; i < 6; i++ {
 				temp := task
 				db.Create(&temp)
 			}
@@ -276,6 +276,103 @@ var _ = Describe("Instatasks API", func() {
 			Ω(first_id > last_id).Should(BeTrue())
 			Ω(w.Code).Should(Equal(http.StatusOK))
 
+		})
+	})
+
+	/////////////////////////////////////////////////////////////
+	Describe("Get Tasks (POST /gettasks) route", func() {
+		Context("Return last 5 tasks by type and Mediad/Instagramusername User done/cencel verification ", func() {
+
+			It("must show 'like' Tasks", func() {
+
+				task := models.Task{
+					Instagramid:       888,
+					Type:              "like",
+					Count:             20,
+					Photourl:          "url/blabla",
+					Instagramusername: "url/blabla",
+					Mediaid:           "mediaid2",
+				}
+
+				for i := 0; i < 2; i++ {
+					temp := task
+					db.Create(&temp)
+				}
+				for i := 0; i < 2; i++ {
+					temp := task
+					temp.Type = "follow"
+					db.Create(&temp)
+				}
+				for i := 0; i < 2; i++ {
+					temp := task
+					db.Create(&temp)
+					db.Delete(&temp)
+				}
+
+				tasks := []models.Task{}
+				db.Order("id desc").Limit(6).Find(&tasks)
+
+				// doned tasks
+				tasks[0].Done()
+				user_mediaid := models.UserMediaid{Instagramid: 888, Mediaid: tasks[0].Mediaid}
+				db.Create(&user_mediaid)
+
+				tasks[1].Done()
+				user_mediaid = models.UserMediaid{Instagramid: 889, Mediaid: tasks[1].Mediaid}
+				db.Create(&user_mediaid)
+
+				req, _ := http.NewRequest("POST", "/gettasks", strings.NewReader(`{"instagramid": 777, "type":"like"}`))
+				req.Header.Add("Content-Type", `application/json`)
+				r.ServeHTTP(w, req)
+
+				Ω(w.Code).Should(Equal(http.StatusOK))
+				Ω(w.Body).Should(ContainUnorderedJSON(`[{"type": "like"}]`))
+			})
+
+			It("must show 'all' Tasks ", func() {
+
+				req, _ := http.NewRequest("POST", "/gettasks", strings.NewReader(`{"instagramid": 888, "type":"all"}`))
+				req.Header.Add("Content-Type", `application/json`)
+				r.ServeHTTP(w, req)
+
+				Ω(w.Code).Should(Equal(http.StatusOK))
+				Ω(w.Body).ShouldNot(ContainUnorderedJSON(`[{"mediaid": "mediaid1"}]`))
+			})
+		})
+	})
+
+	/////////////////////////////////////////////////////////////
+	Describe("Done Task (POST /done) route", func() {
+
+		It("must return ResetContent (205) status if success CCANCEL status DONE", func() {
+			cancel_req := `{
+				"instagramid": 888,
+				"taskid": "19",
+				"status": "cancel"
+			}`
+
+			req, _ := http.NewRequest("POST", "/done", strings.NewReader(cancel_req))
+			req.Header.Add("Content-Type", `application/json`)
+			r.ServeHTTP(w, req)
+
+			Ω(w.Code).Should(Equal(http.StatusResetContent))
+		})
+
+		It("must deposit and return coins if success OK status DONE", func() {
+			ok_req := `{
+				"instagramid": 888,
+				"taskid": "19", 
+				"status": "ok"
+			}`
+
+			req, _ := http.NewRequest("POST", "/done", strings.NewReader(ok_req))
+			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
+			r.ServeHTTP(w, req)
+
+			Ω(w.Code).Should(Equal(http.StatusOK))
+			/// task 19 is follow, price 5, must return 15
+			Ω(w.Body).Should(ContainUnorderedJSON(`{"coins": 15}`))
 		})
 	})
 })

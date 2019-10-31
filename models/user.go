@@ -10,7 +10,7 @@ import (
 )
 
 type User struct {
-	Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key:true"`
+	Instagramid uint `json:"instagramid" binding:"required" gorm:"primary_key:true"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time `sql:"index"`
@@ -19,9 +19,7 @@ type User struct {
 	Deviceid    string     `json:"deviceid" gorm:"-"`
 	Rateus      bool       `binding:"-" gorm:"default:true"`
 
-	Tasks []Task `gorm:"foreignkey:Instagramid;association_foreignkey:Instagramid"`
-
-	DoneTasks []*Task `gorm:"many2many:user_task"`
+	Tasks []Task `gorm:"foreignkey:Instagramid;association_foreignkey:Instagramid;"`
 }
 
 type CachedUser struct {
@@ -151,5 +149,5 @@ func (user *User) SetCache(expiration int) (err error) {
 }
 
 func (user *User) getIdString() string {
-	return strconv.FormatUint(user.Instagramid, 10)
+	return strconv.FormatUint(uint64(user.Instagramid), 10)
 }

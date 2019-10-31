@@ -22,7 +22,7 @@ func Migrate() {
 				// it's a good pratice to copy the struct inside the function,
 				// so side effects are prevented if the original struct changes during the time
 				type User struct {
-					Instagramid uint64 `json:"instagramid" binding:"required" gorm:"primary_key:true"`
+					Instagramid uint `json:"instagramid" binding:"required" gorm:"primary_key:true"`
 					CreatedAt   time.Time
 					UpdatedAt   time.Time
 					DeletedAt   *time.Time `sql:"index"`
@@ -31,9 +31,7 @@ func Migrate() {
 					Deviceid    string     `json:"deviceid" gorm:"-"`
 					Rateus      bool       `binding:"-" gorm:"default:true"`
 
-					Tasks []models.Task `gorm:"foreignkey:Instagramid;association_foreignkey:Instagramid"`
-
-					DoneTasks []*models.Task `gorm:"many2many:user_task"`
+					Tasks []models.Task `gorm:"foreignkey:Instagramid;association_foreignkey:Instagramid;"`
 				}
 				return tx.AutoMigrate(&User{}).Error
 			},
@@ -99,26 +97,42 @@ func Migrate() {
 		{
 			ID: "101608302001",
 			Migrate: func(tx *gorm.DB) error {
+
 				type Task struct {
-					ID        uint `gorm:"primary_key"`
-					CreatedAt time.Time
-					DeletedAt *time.Time `sql:"index"`
-					// Taskid            string     `json:"taskid" binding:"-"`
-					Type              string `json:"type" binding:"required"`
-					Count             uint   `json:"count" binding:"required" gorm:"not null"`
-					LeftCounter       uint
-					Photourl          string `json:"photourl"`
-					Instagramusername string `json:"instagramusername"`
-					Mediaid           string `json:"mediaid"`
+					ID                uint       `json:"-" gorm:"primary_key"`
+					CreatedAt         time.Time  `json:"created_at"`
+					DeletedAt         *time.Time `json:"deleted_at" sql:"index"`
+					Taskid            string     `json:"taskid" gorm:"-"`
+					Type              string     `json:"type" binding:"required"`
+					Count             uint       `json:"count" binding:"required" gorm:"not null"`
+					LeftCounter       uint       `json:"left_counter"`
+					Photourl          string     `json:"photourl"`
+					Instagramusername string     `json:"instagramusername"`
+					Mediaid           string     `json:"mediaid" binding:"required" sql:"index" gorm:"not null"`
 
-					Instagramid uint64 `json:"instagramid" binding:"required" sql:"index" gorm:"not null"`
+					CancelLeftCounter uint8 `json:"-"`
 
-					DoneUsers []*models.User `gorm:"many2many:user_task"`
+					Instagramid uint `json:"instagramid" binding:"required" sql:"index" gorm:"not null"`
 				}
+
 				return tx.AutoMigrate(&Task{}).Error
 			},
 			Rollback: func(tx *gorm.DB) error {
 				return tx.DropTable("tasks").Error
+			},
+		},
+		// create user_mediaids table
+		{
+			ID: "101608302101",
+			Migrate: func(tx *gorm.DB) error {
+				type UserMediaid struct {
+					Instagramid uint   `sgl:"index"`
+					Mediaid     string `sql:"index"`
+				}
+				return tx.AutoMigrate(&UserMediaid{}).Error
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return tx.DropTable("user_mediaids").Error
 			},
 		},
 	})

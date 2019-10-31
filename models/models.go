@@ -15,5 +15,4 @@ func Init() {
 	InitUserCache()
 	InitUserAgentCache()
 	InitTaskCache()
-	InitUserTaskCache()
 }

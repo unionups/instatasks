@@ -16,8 +16,8 @@ func GetOrCreateUser() gin.HandlerFunc {
 		var user User
 
 		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			panic(err)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			log.Println("Error: ", err.Error())
 			return
 		}
 
