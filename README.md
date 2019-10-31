@@ -26,7 +26,7 @@ Basic c3VwZXJhZG1pbjpzdXBlcmFkbWluc3VwZXJzZWNyZXRwYXNzd29yZA==
  ### Create User Agent 
 **POST */admin/useragent***
 
- *Request Body*
+*Request Body*
 ```json
 {
 	"name": "useragent1", 
@@ -59,7 +59,7 @@ Basic c3VwZXJhZG1pbjpzdXBlcmFkbWluc3VwZXJzZWNyZXRwYXNzd29yZA==
 ### Get RSA Public Key
 **GET */admin/useragent/pkey***
 
- *Request Body*
+*Request Body*
 ```json
 {
 	"name": "useragent1"
@@ -76,10 +76,12 @@ Basic c3VwZXJhZG1pbjpzdXBlcmFkbWluc3VwZXJzZWNyZXRwYXNzd29yZA==
 
 ### Accaunt route
 **POST */accaunt***
-| HEADER | VALUE |
+
+|HEADER|VALUE|
 |--|--|
 |Content-Type|application/json|
- *Request Body*
+
+*Request Body*
 ```json
 {
 	"instagramid": 666,
@@ -99,12 +101,15 @@ All keys required.
 ```
 
 ### User Agent settings
+
 **POST */setting***
+
 | HEADER | VALUE |
 |--|--|
 |Content-Type|application/json|
 |User-Agent|useragentname|
- *Request Body*
+
+*Request Body*
 ```json
 not required
 ```
@@ -125,11 +130,13 @@ All keys required.
 	
 ### Crete Task
 **POST */newwork***
+
 | HEADER | VALUE |
 |--|--|
 |Content-Type|application/json|
 |User-Agent|useragentname|
- *Request Body*
+
+*Request Body*
 ```json
 {
 	"instagramid": 777,
@@ -149,11 +156,12 @@ All keys required.
 ```
 ### Tasks history
 **POST */history***
+
 | HEADER | VALUE |
 |--|--|
 |Content-Type|application/json|
 
- *Request Body*
+*Request Body*
 ```json
 {
 	"instagramid": 777
@@ -180,11 +188,13 @@ All keys required.
 ```
 ###  Get Tasks
 **POST */gettasks***
+
 | HEADER | VALUE |
 |--|--|
 |Content-Type|application/json|
 
- *Request Body*
+
+*Request Body*
 ```json
 {
 	"instagramid": 777,
@@ -206,12 +216,13 @@ All keys required.
 ```
 ###  Done Task
 **POST */done***
+
 | HEADER | VALUE |
 |--|--|
 |Content-Type|application/json|
 |User-Agent|useragentname|
 
- *Request Body*
+*Request Body*
 ```json
 {
 	"instagramid": 777,
@@ -234,12 +245,13 @@ http status code: 200
 
 ###  Rateus
 **POST */rateus***
+
 | HEADER | VALUE |
 |--|--|
 |Content-Type|application/json|
 |User-Agent|useragentname|
 
- *Request Body*
+*Request Body*
 ```json
 {
 	"instagramid": 888

@@ -231,8 +231,8 @@ func DoneTask() gin.HandlerFunc {
 		c.JSON(200, gin.H{"coins": user.Coins})
 
 		go func(u User) {
-			user.UpdateColumn("coins", user.Coins)
 			models.DB.Create(&models.UserMediaid{Instagramid: json.Instagramid, Mediaid: task.Mediaid})
+			user.UpdateColumn("coins", user.Coins)
 		}(user)
 	}
 }
