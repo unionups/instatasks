@@ -10,7 +10,7 @@ import (
 )
 
 type User struct {
-	Instagramid uint `json:"instagramid" binding:"required" gorm:"primary_key:true"`
+	Instagramid uint `json:"instagramid" binding:"required" gorm:"auto_increment:false;primary_key:true"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time `sql:"index"`

@@ -22,7 +22,7 @@ func Migrate() {
 				// it's a good pratice to copy the struct inside the function,
 				// so side effects are prevented if the original struct changes during the time
 				type User struct {
-					Instagramid uint `json:"instagramid" binding:"required" gorm:"primary_key:true"`
+					Instagramid uint `json:"instagramid" binding:"required" gorm:"auto_increment:false;primary_key:true"`
 					CreatedAt   time.Time
 					UpdatedAt   time.Time
 					DeletedAt   *time.Time `sql:"index"`
@@ -83,7 +83,7 @@ func Migrate() {
 			ID: "101608301901",
 			Migrate: func(tx *gorm.DB) error {
 				type RsaKey struct {
-					Name string `header:"User-Agent" json:"name" gorm:"primary_key:true"`
+					Name string `header:"User-Agent" json:"name" gorm:"primary_key:true;"`
 
 					RsaPrivateKeyAesEncripted []byte `gorm:"not null"`
 					RsaPublicKeyAesEncripted  []byte `gorm:"not null"`
@@ -127,7 +127,8 @@ func Migrate() {
 			ID: "101608302101",
 			Migrate: func(tx *gorm.DB) error {
 				type UserMediaid struct {
-					Instagramid uint   `sgl:"index"`
+					ID          uint
+					Instagramid uint   `sql:"index"`
 					Mediaid     string `sql:"index"`
 				}
 				return tx.AutoMigrate(&UserMediaid{}).Error

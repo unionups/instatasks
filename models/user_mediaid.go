@@ -1,6 +1,7 @@
 package models
 
 type UserMediaid struct {
-	Instagramid uint   `sgl:"index"`
+	ID          uint
+	Instagramid uint   `sql:"index"`
 	Mediaid     string `sql:"index"`
 }
