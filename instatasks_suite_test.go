@@ -43,6 +43,8 @@ var _ = BeforeSuite(func() {
 	// autocleaner = DatabaseAutocleaner(db)
 	migrations.Migrate()
 	models.Init()
+	userAgent := &models.UserAgent{Name: "user_agent_with_default_settings"}
+	userAgent.Create()
 })
 
 var _ = AfterSuite(func() {
@@ -61,6 +63,7 @@ var _ = Describe("Instatasks API", func() {
 			It("Should return Ok code", func() {
 				req, _ := http.NewRequest("GET", "/ping", nil)
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
@@ -69,6 +72,7 @@ var _ = Describe("Instatasks API", func() {
 			It("Should return pong JSON", func() {
 				req, err := http.NewRequest("GET", "/ping", nil)
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 
 				Ω(err).ShouldNot(HaveOccurred())
@@ -101,6 +105,7 @@ var _ = Describe("Instatasks API", func() {
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 				///*******
 				LogHttpData(req, w)
@@ -120,6 +125,7 @@ var _ = Describe("Instatasks API", func() {
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 
 				Ω(w.Code).Should(Equal(http.StatusOK))
@@ -130,6 +136,7 @@ var _ = Describe("Instatasks API", func() {
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(wrongReqBody))
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 
 				Ω(w.Code).Should(Equal(http.StatusBadRequest))
@@ -146,6 +153,7 @@ var _ = Describe("Instatasks API", func() {
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(reqBody))
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 				///*******
 				LogHttpData(req, w)
@@ -164,6 +172,7 @@ var _ = Describe("Instatasks API", func() {
 
 				req, _ := http.NewRequest("POST", "/accaunt", bytes.NewBuffer(bannedDeviceReqBody))
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 				///*******
 				LogHttpData(req, w)
@@ -177,8 +186,6 @@ var _ = Describe("Instatasks API", func() {
 	Describe("User Agent settings (POST /setting) route", func() {
 
 		It("must return User Agent settings", func() {
-			userAgent := &models.UserAgent{Name: "user_agent_with_default_settings"}
-			userAgent.Save()
 
 			req, _ := http.NewRequest("POST", "/setting", nil)
 			req.Header.Add("Content-Type", `application/json`)
@@ -273,6 +280,7 @@ var _ = Describe("Instatasks API", func() {
 
 			req, _ := http.NewRequest("POST", "/history", strings.NewReader(`{"instagramid": 777}`))
 			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 			r.ServeHTTP(w, req)
 			///*******
 			LogHttpData(req, w)
@@ -336,6 +344,7 @@ var _ = Describe("Instatasks API", func() {
 
 				req, _ := http.NewRequest("POST", "/gettasks", strings.NewReader(`{"instagramid": 777, "type":"like"}`))
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 				///*******
 				LogHttpData(req, w)
@@ -348,6 +357,7 @@ var _ = Describe("Instatasks API", func() {
 
 				req, _ := http.NewRequest("POST", "/gettasks", strings.NewReader(`{"instagramid": 888, "type":"all"}`))
 				req.Header.Add("Content-Type", `application/json`)
+				req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 				r.ServeHTTP(w, req)
 				///*******
 				LogHttpData(req, w)
@@ -370,6 +380,7 @@ var _ = Describe("Instatasks API", func() {
 
 			req, _ := http.NewRequest("POST", "/done", strings.NewReader(cancel_req))
 			req.Header.Add("Content-Type", `application/json`)
+			req.Header.Add("User-Agent", `user_agent_with_default_settings`)
 			r.ServeHTTP(w, req)
 			///*******
 			LogHttpData(req, w)
@@ -427,10 +438,6 @@ var _ = Describe("Instatasks API", func() {
 		})
 	})
 })
-
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
 
 var _ = Describe("Instatasks Admin API. Admin (/admin) protected route group", func() {
 

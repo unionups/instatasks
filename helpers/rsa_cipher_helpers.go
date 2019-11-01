@@ -11,6 +11,7 @@ import (
 )
 
 type RSAPrivateKey = rsa.PrivateKey
+type RSAPublicKey = rsa.PublicKey
 
 func GenerateKeyPair(bits int) (*rsa.PrivateKey, *rsa.PublicKey) {
 	privkey, err := rsa.GenerateKey(rand.Reader, bits)
@@ -87,20 +88,20 @@ func BytesToPublicKey(pub []byte) *rsa.PublicKey {
 	return key
 }
 
-func EncryptWithPublicKey(msg []byte, pub *rsa.PublicKey) []byte {
+func EncryptWithPublicKey(msg []byte, pub *rsa.PublicKey) ([]byte, error) {
 	hash := sha512.New()
 	ciphertext, err := rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return ciphertext
+	return ciphertext, nil
 }
 
-func DecryptWithPrivateKey(ciphertext []byte, priv *rsa.PrivateKey) []byte {
+func DecryptWithPrivateKey(ciphertext []byte, priv *rsa.PrivateKey) ([]byte, error) {
 	hash := sha512.New()
 	plaintext, err := rsa.DecryptOAEP(hash, rand.Reader, priv, ciphertext, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return plaintext
+	return plaintext, nil
 }

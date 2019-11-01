@@ -12,7 +12,7 @@ var DB *gorm.DB
 func Init() {
 	ServerConfig = &config.GetConfig().Server
 	DB = database.GetDB()
-	InitUserCache()
 	InitUserAgentCache()
+	InitUserCache()
 	InitTaskCache()
 }

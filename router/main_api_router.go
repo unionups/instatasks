@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/aviddiviner/gin-limit"
 	"github.com/gin-gonic/gin"
 	"instatasks/config"
 	"instatasks/controllers"
@@ -15,19 +16,30 @@ func SetupRouter() *gin.Engine {
 	serverConfig := config.GetConfig().Server
 
 	router := gin.Default()
+
+	if serverConfig.ConnectionLimit > 0 {
+		router.Use(limit.MaxAllowed(serverConfig.ConnectionLimit))
+	}
+
 	router.Use(middlwares.CORS())
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
 
-	router.POST("/accaunt", controllers.GetOrCreateUser())
-	router.POST("/setting", controllers.GetUseragent())
-	router.POST("/newwork", controllers.CreateTask())
-	router.POST("/history", controllers.GetByUserCreatedTaskHistory())
-	router.POST("/gettasks", controllers.GetTasks())
-	router.POST("/done", controllers.DoneTask())
-	router.POST("/rateus", controllers.DoneRateus())
+	mainApi := router.Group("/")
+
+	if serverConfig.BodyCrypt {
+		mainApi.Use(middlwares.BodyCrypt())
+	}
+
+	mainApi.POST("/accaunt", controllers.GetOrCreateUser())
+	mainApi.POST("/setting", controllers.GetUseragent())
+	mainApi.POST("/newwork", controllers.CreateTask())
+	mainApi.POST("/history", controllers.GetByUserCreatedTaskHistory())
+	mainApi.POST("/gettasks", controllers.GetTasks())
+	mainApi.POST("/done", controllers.DoneTask())
+	mainApi.POST("/rateus", controllers.DoneRateus())
 
 	authorized := router.Group("/admin", gin.BasicAuth(gin.Accounts{
 		serverConfig.Superadmin.Username: serverConfig.Superadmin.Password,

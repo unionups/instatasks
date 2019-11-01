@@ -1,6 +1,6 @@
 # Instatask API
-### **Staging host: [instatasks.herokuapp.com](instatasks.herokuapp.com)**
-**Ping:** [instatasks.herokuapp.com/ping](instatasks.herokuapp.com/ping)
+### **Staging host: [instatasks.herokuapp.com](https://instatasks.herokuapp.com)**
+**Ping:** [instatasks.herokuapp.com/ping](https://instatasks.herokuapp.com/ping)
 
 # API endpoints examples
 ## Admin context

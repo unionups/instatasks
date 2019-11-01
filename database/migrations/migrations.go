@@ -44,7 +44,7 @@ func Migrate() {
 			ID: "101608301701",
 			Migrate: func(tx *gorm.DB) error {
 				type BannedDevice struct {
-					Deviceid  string `gorm:"primary_key:true"`
+					Deviceid  string `gorm:"auto_increment:false;primary_key:true"`
 					CreatedAt time.Time
 				}
 				return tx.AutoMigrate(&BannedDevice{}).Error

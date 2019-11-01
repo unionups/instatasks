@@ -13,9 +13,11 @@ type Superadmin struct {
 }
 
 type ServerConfiguration struct {
-	Port          string
-	AesPassphrase string
-	RsaKeySize    int `mapstructure:"rsa_key_size"`
+	Port            string
+	AesPassphrase   string
+	RsaKeySize      int  `mapstructure:"rsa_key_size"`
+	ConnectionLimit int  `mapstructure:"connection_limt"`
+	BodyCrypt       bool `mapstructure:"body_crypt"`
 	Superadmin
 	Cache
 }

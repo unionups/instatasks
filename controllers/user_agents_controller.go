@@ -86,23 +86,22 @@ func CreateUseragent() gin.HandlerFunc {
 func GetRsaPublicKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		var rsaKey models.RsaKey
-
-		db := database.GetDB()
-
-		if err := c.ShouldBindJSON(&rsaKey); err != nil {
+		json := struct{ Name string }{}
+		if err := c.ShouldBindJSON(&json); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := db.First(&rsaKey).Error; err != nil {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err})
-			log.Println("Error: RSA key not found")
+		var (
+			pks *models.CachedRSAKeys
+			ok  bool
+		)
+
+		if pks, ok = models.CachedRSAKeysGlobal[json.Name]; !ok {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Uncnown User-Agent"})
 			return
 		}
-
-		rsa_public_key := string(AesDecrypt(rsaKey.RsaPublicKeyAesEncripted, config.GetConfig().Server.AesPassphrase))
-
-		c.JSON(200, gin.H{"rsa_public_key": rsa_public_key})
+		pkb := PublicKeyToBytes(&pks.CachedRSAPublicKey)
+		c.JSON(200, gin.H{"rsa_public_key": string(pkb)})
 	}
 }

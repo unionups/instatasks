@@ -36,10 +36,15 @@ type CachedPrice struct {
 	Pricelike   uint
 }
 
+type CachedRSAKeys struct {
+	CachedRSAPrivateKey RSAPrivateKey
+	CachedRSAPublicKey  RSAPublicKey
+}
+
 var (
 	cachedUserAgentSettings = make(map[string]*CachedUserAgentSettings)
 	cachedPrice             = make(map[string]*CachedPrice)
-	cachedRSAPrivateKey     = make(map[string]*RSAPrivateKey)
+	CachedRSAKeysGlobal     = make(map[string]*CachedRSAKeys)
 	mx                      sync.Mutex
 )
 
@@ -54,21 +59,8 @@ func InitUserAgentCache() {
 	}
 }
 
-func (ua *UserAgent) BeforeCreate() (err error) {
-
-	rsa_private_key, rsa_public_key := GenerateKeyPair(ServerConfig.RsaKeySize)
-
-	rsa_private_key_bytes := PrivateKeyToBytes(rsa_private_key)
-	rsa_public_key_bytes := PublicKeyToBytes(rsa_public_key)
-
-	aes_encripted_rsa_private_key_bytes := AesEncrypt(rsa_private_key_bytes, ServerConfig.AesPassphrase)
-	aes_encripted_rsa_public_key_bytes := AesEncrypt(rsa_public_key_bytes, ServerConfig.AesPassphrase)
-
-	ua.RsaKey = RsaKey{
-		RsaPrivateKeyAesEncripted: aes_encripted_rsa_private_key_bytes,
-		RsaPublicKeyAesEncripted:  aes_encripted_rsa_public_key_bytes,
-	}
-
+func (userAgent *UserAgent) BeforeCreate() (err error) {
+	err = userAgent.GenerateRSAKeys()
 	return
 }
 
@@ -142,10 +134,47 @@ func (userAgent *UserAgent) CachePrice() (err error) {
 	return
 }
 
+func (userAgent *UserAgent) CacheRSAKeys() (err error) {
+	mx.Lock()
+	defer mx.Unlock()
+
+	rsa_private_key_bytes := AesDecrypt(userAgent.RsaKey.RsaPrivateKeyAesEncripted, ServerConfig.AesPassphrase)
+	rsa_public_key_bytes := AesDecrypt(userAgent.RsaKey.RsaPublicKeyAesEncripted, ServerConfig.AesPassphrase)
+
+	CachedRSAKeysGlobal[userAgent.Name] = &CachedRSAKeys{
+		CachedRSAPrivateKey: *BytesToPrivateKey(rsa_private_key_bytes),
+		CachedRSAPublicKey:  *BytesToPublicKey(rsa_public_key_bytes),
+	}
+	return
+}
+
 func (userAgent *UserAgent) CacheUserAgent() (err error) {
 	userAgent.CacheSettings()
 	userAgent.CachePrice()
-	rsa_private_key_bytes := AesDecrypt(userAgent.RsaKey.RsaPrivateKeyAesEncripted, ServerConfig.AesPassphrase)
-	cachedRSAPrivateKey[userAgent.Name] = BytesToPrivateKey(rsa_private_key_bytes)
+	userAgent.CacheRSAKeys()
+	return
+}
+
+func (userAgent *UserAgent) GenerateRSAKeys() (err error) {
+	rsa_private_key, rsa_public_key := GenerateKeyPair(ServerConfig.RsaKeySize)
+
+	rsa_private_key_bytes := PrivateKeyToBytes(rsa_private_key)
+	rsa_public_key_bytes := PublicKeyToBytes(rsa_public_key)
+
+	aes_encripted_rsa_private_key_bytes := AesEncrypt(rsa_private_key_bytes, ServerConfig.AesPassphrase)
+	aes_encripted_rsa_public_key_bytes := AesEncrypt(rsa_public_key_bytes, ServerConfig.AesPassphrase)
+
+	userAgent.RsaKey = RsaKey{
+		RsaPrivateKeyAesEncripted: aes_encripted_rsa_private_key_bytes,
+		RsaPublicKeyAesEncripted:  aes_encripted_rsa_public_key_bytes,
+	}
+
+	return
+}
+
+func (userAgent *UserAgent) RegenerateRSAKeys() (err error) {
+	userAgent.GenerateRSAKeys()
+	DB.Save(userAgent)
+	userAgent.CacheRSAKeys()
 	return
 }
