@@ -37,5 +37,5 @@ server:
   # By default server will serve an unbounded number of requests. 
   # Limiting the number of simultaneous connections can sometimes
   # greatly speed things up under load.
-  connection_limit: 10 # if 0 - No Limit
+  connection_limit: 100 # if 0 - No Limit
   
