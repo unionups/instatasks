@@ -15,6 +15,7 @@ type (
 	CacheItem  = cache.Item
 )
 
+
 var CacheCodecs = make(map[string]*cache.Codec)
 
 func GetCacheCodec(key string) *cache.Codec {
@@ -62,6 +63,8 @@ func RegisterCacheCodec(key string) *cache.Codec {
 	db_count := len(CacheCodecs)
 
 	options := GetOptions(db_count)
+
+
 	client := redis.NewClient(options)
 
 	pong, err := client.Ping().Result()

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/joho/godotenv"
 	"instatasks/config"
 	"instatasks/database"
 	"instatasks/database/migrations"
@@ -21,9 +21,12 @@ import (
 
 var db *gorm.DB
 var err error
-
 func main() {
 
+	_ = godotenv.Load("/go/src/instatasks/server.env")
+//	if err == nil {
+//		log.Fatal("Error loading .env file")
+//	}
 	config := config.InitConfig()
 	db = database.InitDB()
 	db.DB().Ping()

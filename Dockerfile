@@ -8,5 +8,5 @@ COPY . /go/src/instatasks
 
 RUN CGO_ENABLED=0 go install instatasks
 
-CMD /go/bin/instatasks
+CMD sleep 10 && /go/bin/instatasks
 

@@ -39,9 +39,9 @@ func InitConfig() *Configuration {
 	configuration.Server.AesPassphrase = os.Getenv("AES_PASSPHRASE")
 	configuration.Server.Superadmin.Username = os.Getenv("SUPERADMIN_USERNAME")
 	configuration.Server.Superadmin.Password = os.Getenv("SUPERADMIN_PASSWORD")
-
+	
 	configuration.Database.Username = os.Getenv("POSTGRES_USER")
-	configuration.Database.Password = os.Getenv("POSTGRES_PASWORD")
+	configuration.Database.Password = os.Getenv("POSTGRES_PASSWORD")
 
 	configuration.Redis.Password = os.Getenv("REDIS_PASSWORD")
 

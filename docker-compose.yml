@@ -1,89 +1,115 @@
-version: '3.2'
+version: '3.4'
 
 services:
 
+  #############################
+  ## PostgreSQL
   postgres:
     container_name: instatasksdb
     image: postgres:alpine
     restart: always
     hostname: postgres
     volumes:
-      - ./data/postgresql/pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+#      - docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:z
     env_file: 
-      - .env
-    # ports:
-    #   - 5434:5432
+      - docker.env
+    ports:
+      - 5432
     networks:
-      - instatasksnet
-    # deploy:
-    #   mode: replicated
-    #   replicas: 2
-    #   endpoint_mode: dnsrr
-  # adminer:
-  #   image: adminer
-  #   restart: always
-  #   ports:
-  #     - 8081:8080
-  #   networks:
-  #     - instatasksnet
-
-  redis: 
-    container_name: redis_instatasksdb
-    image: redis:alpine
+      - postgresnet
+    deploy:
+      mode: replicated
+      replicas: 32
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 5
+        max-size: 10m
+  ##################################
+  ## Redis
+  redis:
     hostname: redis
-    restart: always
+    image: redis:alpine
+    restart: on-failure
     env_file: 
-      - .env
-    networks:
-      - instatasksnet
+      - docker.env
     volumes:
       # - ./redis_storage/data:/data
-      - ./redis_storage/config:/usr/local/etc/redis
-    # sysctls:
-    #   - vm.overcommit_memory=1
-    command:
-      - 'redis-server'
-      - '--loglevel ${REDIS_LOGLEVEL:-warning}'
-      # - '--databases ${REDIS_DATABASES:-2}'
-      - '--appendonly ${REDIS_APPENDONLY:-no}'
-      - '--maxmemory ${REDIS_MAXMEM:-100mb}'
-      - '--maxmemory-policy ${REDIS_POLICY:-volatile-lfu}'
-      - '--requirepass ${REDIS_PASSWORD}'
+      - ./redis_storage/config:/usr/local/etc/redis:ro
+    ports:
+      - 6379
+    networks:
+      - redisnet
+    deploy:
+      mode: replicated
+      replicas: 2
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 5
+        max-size: 10m
+    command: >
+      sh -c "env redis-server
+      --loglevel $$REDIS_LOGLEVEL
+      --databases $$REDIS_DATABASES
+      --appendonly $$REDIS_APPENDONLY
+      --maxmemory $$REDIS_MAXMEM
+      --maxmemory-policy $$REDIS_POLICY
+      --requirepass $$REDIS_PASSWORD"
 
-
+  ##############################
+  ## WEB
   web:
     container_name: instatasks
     image: djekxa/instatasks:v1
     hostname: instatasks
-    restart: always
+    restart: on-failure
     build:
       context: .
       dockerfile: Dockerfile
-    env_file: 
-      - .env
     networks:
       - instatasksnet
-    # volumes:
-    #   - .:/go/src/instatasks
+      - postgresnet
+      - redisnet
+    volumes:
+      - .:/go/src/instatasks:ro
     ports:
-      - 8080:8080
-    # swarm mode 
-    # deploy:
-    #   mode: replicated
-    #   replicas: 2
-    #   endpoint_mode: vip
-    #   update_config:
-    #     parallelism: 2
-    #     delay: 10s
+      - 80:8080
+    deploy:
+      mode: replicated
+      replicas: 32
     depends_on:
       - postgres
       - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 5
+        max-size: 10m
     links:
       - postgres
       - redis
-    labels:
-      kompose.service.type: LoadBalancer
-
+###############################
+## NETWORKS
 networks:
   instatasksnet:
-    driver: bridge
+    driver: overlay
+    attachable: true
+  postgresnet:
+    driver: overlay
+#    attachable: true
+  redisnet:
+    driver: overlay
+#    attachable: true
+##############################
+## VOLUMES
+volumes:
+  pgdata:
+    driver: local-persist
+    driver_opts:
+      mountpoint: /home/deploy/mnt/postgresql/pgdata
+  docker-entrypoint-initdb.d:
+    driver: local-persist
+    driver_opts:
+      mountpoint: /home/deploy/mnt/postgresql/docker-entrypoint-initdb.d

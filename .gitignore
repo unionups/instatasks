@@ -2,3 +2,5 @@ logs
 *.log
 .env
 data
+docker.env
+server.env
