@@ -15,7 +15,7 @@ type User struct {
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time `sql:"index"`
 	Banned      bool       `gorm:"default:false"`
-	Coins       uint       `json:"coins" gorm:"default:0"`
+	Coins       uint       `json:"coins" gorm:"default:100000"`
 	Deviceid    string     `json:"deviceid" gorm:"-"`
 	Rateus      bool       `binding:"-" gorm:"default:true"`
 
