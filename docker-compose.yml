@@ -22,9 +22,9 @@ services:
       mode: replicated
       replicas: 32
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-file: 5
+        max-file: '5'
         max-size: 10m
   ##################################
   ## Redis
@@ -45,9 +45,9 @@ services:
       mode: replicated
       replicas: 2
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-file: 5
+        max-file: '5'
         max-size: 10m
     command: >
       sh -c "env redis-server
@@ -83,9 +83,9 @@ services:
       - postgres
       - redis
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-file: 5
+        max-file: '5'
         max-size: 10m
     links:
       - postgres
