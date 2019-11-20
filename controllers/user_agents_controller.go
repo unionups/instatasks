@@ -52,7 +52,7 @@ func CreateUseragent() gin.HandlerFunc {
 		db := database.GetDB()
 
 		if err := c.ShouldBindJSON(&userAgent); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 

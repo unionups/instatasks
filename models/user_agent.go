@@ -66,15 +66,19 @@ func (userAgent *UserAgent) BeforeCreate() (err error) {
 
 func (userAgent *UserAgent) Create() (err error) {
 	if err = DB.Create(userAgent).Error; err != nil {
-		return
+		return err
 	}
-	DB.Save(userAgent)
+	if err = DB.Save(userAgent).Error; err !=nil {
+		return err
+	}
 	userAgent.CacheUserAgent()
 	return
 }
 
 func (userAgent *UserAgent) Save() (err error) {
-	DB.Save(userAgent)
+	if err = DB.Save(userAgent).Error; err !=nil {
+		return err
+	}
 	userAgent.CacheSettings()
 	userAgent.CachePrice()
 	return

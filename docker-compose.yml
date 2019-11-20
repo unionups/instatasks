@@ -20,7 +20,7 @@ services:
       - postgresnet
     deploy:
       mode: replicated
-      replicas: 32
+      replicas: 3
     logging:
       driver: 'json-file'
       options:
@@ -75,10 +75,10 @@ services:
     volumes:
       - .:/go/src/instatasks:ro
     ports:
-      - 80:8080
+      - 80:80
     deploy:
       mode: replicated
-      replicas: 32
+      replicas: 3
     depends_on:
       - postgres
       - redis
@@ -94,8 +94,8 @@ services:
 ## NETWORKS
 networks:
   instatasksnet:
-    driver: overlay
-    attachable: true
+    driver: bridge
+#    attachable: true
   postgresnet:
     driver: overlay
 #    attachable: true
