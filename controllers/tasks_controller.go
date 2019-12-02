@@ -131,14 +131,14 @@ func GetTasks() gin.HandlerFunc {
 			Instagramusername string `json:"instagramusername" sql:"index"`
 			Mediaid           string `json:"mediaid" sql:"index"`
 		}{}
+		
+		
 
 		if json.Type == "all" {
 			if err := models.DB.Raw(`SELECT DISTINCT "tasks"."id", "tasks"."type", "tasks"."photourl", "tasks"."instagramusername", "tasks"."mediaid"
 				FROM "tasks" 
-				LEFT OUTER JOIN "user_mediaids" AS a ON "tasks"."mediaid" = a."mediaid"
-				LEFT OUTER JOIN "user_mediaids" AS b ON b.instagramid = $1::integer
-				WHERE "tasks"."instagramid" <> $1::integer
-				AND "tasks"."deleted_at" IS NULL 
+				LEFT JOIN "user_mediaids" ON "tasks"."mediaid" = "user_mediaids"."mediaid" AND "user_mediaids"."instagramid" = $1::integer
+				WHERE "user_mediaids"."mediaid" IS NULL AND "tasks"."instagramid" <> $1::integer AND "tasks"."deleted_at" IS NULL
 				LIMIT 5;`, json.Instagramid).
 				Scan(&tasks).Error; err != nil {
 				c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -148,11 +148,11 @@ func GetTasks() gin.HandlerFunc {
 		} else {
 			if err := models.DB.Raw(`SELECT DISTINCT "tasks"."id", "tasks"."type", "tasks"."photourl", "tasks"."instagramusername", "tasks"."mediaid"
 				FROM "tasks" 
-				LEFT OUTER JOIN "user_mediaids" AS a ON "tasks"."mediaid" = a."mediaid"
-				LEFT OUTER JOIN "user_mediaids" AS b ON b.instagramid = $1::integer
-				WHERE "tasks"."type" = $2::text
-				AND "tasks"."instagramid" <> $1::integer
-				AND "tasks"."deleted_at" IS NULL 
+				LEFT JOIN "user_mediaids" ON "tasks"."mediaid" = "user_mediaids"."mediaid" AND "user_mediaids"."instagramid" = $1::integer
+				WHERE "user_mediaids"."mediaid" IS NULL 
+				AND "tasks"."instagramid" <> $1::integer 
+				AND "tasks"."type" = $2::text
+				AND "tasks"."deleted_at" IS NULL
 				LIMIT 5;`, json.Instagramid, json.Type).
 				Scan(&tasks).Error; err != nil {
 				c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
